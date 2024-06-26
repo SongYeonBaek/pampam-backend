@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="pampam-service" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="common" target="11" />
+      <module name="discovery" target="11" />
+      <module name="eamil-service" target="11" />
+      <module name="gateway" target="11" />
+      <module name="member-service" target="11" />
+      <module name="seller-image-service" target="11" />
+      <module name="seller-service" target="11" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="common" options="-parameters" />
+      <module name="discovery" options="-parameters" />
+      <module name="eamil-service" options="-parameters" />
+      <module name="gateway" options="-parameters" />
+      <module name="member-service" options="-parameters" />
+      <module name="pampam-service" options="-parameters" />
+      <module name="seller-image-service" options="-parameters" />
+      <module name="seller-service" options="-parameters" />
+    </option>
+  </component>
+</project>
