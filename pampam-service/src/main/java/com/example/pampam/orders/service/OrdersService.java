@@ -2,6 +2,7 @@ package com.example.pampam.orders.service;
 
 import com.example.pampam.cart.model.entity.Cart;
 import com.example.pampam.cart.repository.CartRepository;
+import com.example.pampam.cart.service.CartService;
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
@@ -42,7 +43,7 @@ public class OrdersService {
     private final OrderedProductRepository orderedProductRepository;
     private final PaymentService paymentService;
     private final ProductRepository productRepository;
-    private final CartRepository cartRepository;
+    private final CartService cartService;
 
     @Value("${jwt.secret-key}")
     private String secretKey;
@@ -62,8 +63,6 @@ public class OrdersService {
         String userEmail = JwtUtils.getUsername(token, secretKey);
 
         if (consumerIdx != null) {
-            //카트에서 삭제
-            cartRepository.deleteAllByConsumerIdx(consumerIdx);
 
             Orders order = ordersRepository.save(Orders.dtoToEntity(impUid, userEmail, consumerIdx, amount));
 
@@ -71,6 +70,10 @@ public class OrdersService {
             for (GetPortOneRes getPortOneRes : paymentProducts.getProducts()) {
                 orderedProductRepository.save(OrderedProduct.dtoToEntity(order, getPortOneRes));
                 orderList.add(PostOrderInfoRes.dtoToEntity(order.getIdx(), impUid, getPortOneRes, order));
+
+                //카트 삭제
+                cartService.deleteOrderedCart(consumerIdx, getPortOneRes.getId());
+
             }
 
             return BaseResponse.successResponse("주문 완료", orderList);
