@@ -5,6 +5,7 @@ import com.example.pampam.member.model.entity.Consumer;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
@@ -12,4 +13,5 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     void deleteAllByConsumerIdx(Long consumerIdx);
 
+    Optional<Cart> findByConsumerIdxAndProductIdx(Long consumerIdx, Long productIdx);
 }

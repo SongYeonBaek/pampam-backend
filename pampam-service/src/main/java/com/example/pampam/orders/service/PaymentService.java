@@ -2,6 +2,7 @@ package com.example.pampam.orders.service;
 
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.orders.model.entity.PaymentProducts;
+import com.example.pampam.orders.model.entity.PaymentValidationResult;
 import com.example.pampam.orders.model.response.GetPortOneRes;
 import com.example.pampam.product.model.entity.Product;
 import com.example.pampam.product.repository.ProductRepository;
@@ -92,21 +93,21 @@ public class PaymentService {
     }
 
     //Portone에서 결제 정보 가져와서 검증 처리
-    public Boolean paymentValidation(String impUid) throws IamportResponseException, IOException {
+    public PaymentValidationResult paymentValidation(String impUid) throws IamportResponseException, IOException {
         IamportResponse<Payment> response = getPaymentInfo(impUid);
         Integer amount = response.getResponse().getAmount().intValue();
         String customDataString = response.getResponse().getCustomData();
-        System.out.println(customDataString);
         customDataString = "{\"products\":" + customDataString + "}";
         Gson gson = new Gson();
         PaymentProducts paymentProducts = gson.fromJson(customDataString, PaymentProducts.class);
 
         Integer totalPrice = getTotalPrice(paymentProducts.getProducts());
-        if(amount.equals(totalPrice) ) {
-            return true;
-        }
-        return false;
+        boolean isValid = amount.equals(totalPrice);
+
+        return new PaymentValidationResult(isValid, paymentProducts, amount);
     }
+
+
 
     public BaseResponse<String> paymentCancel(String impUid) throws IOException {
         String token = getToken();
