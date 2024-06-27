@@ -48,14 +48,7 @@ public class OrdersService {
     @Value("${jwt.secret-key}")
     private String secretKey;
 
-    public BaseResponse<List<PostOrderInfoRes>> createOrder(String token, String impUid) throws IamportResponseException, IOException {
-        IamportResponse<Payment> iamportResponse = paymentService.getPaymentInfo(impUid);
-        Integer amount = iamportResponse.getResponse().getAmount().intValue();
-        String customDataString = iamportResponse.getResponse().getCustomData();
-        customDataString = "{\"products\":" + customDataString + "}";
-        Gson gson = new Gson();
-        PaymentProducts paymentProducts = gson.fromJson(customDataString, PaymentProducts.class);
-
+    public BaseResponse<List<PostOrderInfoRes>> createOrder(String token, String impUid, PaymentProducts paymentProducts, Integer amount) throws IamportResponseException, IOException {
         List<PostOrderInfoRes> orderList = new ArrayList<>();
 
         token = JwtUtils.replaceToken(token);
@@ -63,17 +56,15 @@ public class OrdersService {
         String userEmail = JwtUtils.getUsername(token, secretKey);
 
         if (consumerIdx != null) {
-
             Orders order = ordersRepository.save(Orders.dtoToEntity(impUid, userEmail, consumerIdx, amount));
 
-            //Custom Data 안에 있던 Product 리스트 하나씩 꺼내와서 OrderedProduct에 저장
+            // Custom Data 안에 있던 Product 리스트 하나씩 꺼내와서 OrderedProduct에 저장
             for (GetPortOneRes getPortOneRes : paymentProducts.getProducts()) {
                 orderedProductRepository.save(OrderedProduct.dtoToEntity(order, getPortOneRes));
                 orderList.add(PostOrderInfoRes.dtoToEntity(order.getIdx(), impUid, getPortOneRes, order));
 
-                //카트 삭제
+                // 카트 삭제
                 cartService.deleteOrderedCart(consumerIdx, getPortOneRes.getId());
-
             }
 
             return BaseResponse.successResponse("주문 완료", orderList);

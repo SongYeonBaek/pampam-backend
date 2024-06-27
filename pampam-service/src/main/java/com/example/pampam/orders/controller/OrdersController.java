@@ -3,6 +3,7 @@ package com.example.pampam.orders.controller;
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
+import com.example.pampam.orders.model.entity.PaymentValidationResult;
 import com.example.pampam.orders.model.response.OrdersListRes;
 import com.example.pampam.orders.model.response.PostOrderInfoRes;
 import com.example.pampam.orders.service.OrdersService;
@@ -32,19 +33,22 @@ public class OrdersController {
             @ApiImplicitParam(name = "impUid", value = "주문 번호 입력",
                     required = true, paramType = "query", dataType = "string", defaultValue = "")})
     @RequestMapping(method = RequestMethod.GET,value = "/validation")
-    public BaseResponse<List<PostOrderInfoRes>> ordersCreate(@RequestHeader(value = "Authorization") String token, String impUid){
-        try{
-            //주문의 유효성 검사
-            if(paymentService.paymentValidation(impUid)){
-                //orders과 orderedProduct에 저장
+    public BaseResponse<List<PostOrderInfoRes>> ordersCreate(@RequestHeader(value = "Authorization") String token, String impUid) {
+        try {
+            PaymentValidationResult validationResult = paymentService.paymentValidation(impUid);
 
-                return ordersService.createOrder(token, impUid);
+            if (validationResult.isValid()) {
+                // orders와 orderedProduct에 저장
+                return ordersService.createOrder(token, impUid, validationResult.getPaymentProducts(), validationResult.getAmount());
             }
+
             throw new EcommerceApplicationException(ErrorCode.NOT_MATCH_AMOUNT);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
+
+
 
 
     //Consumer의 주문 내역을 확인
