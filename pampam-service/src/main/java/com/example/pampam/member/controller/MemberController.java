@@ -22,7 +22,7 @@ public class MemberController {
     private final KakaoService kakaoService;
 
     @RequestMapping(method = RequestMethod.POST, value = "/consumer/signup")
-    public ResponseEntity consumerSignup(@RequestPart ConsumerSignupReq memberSignupReq, MultipartFile profileImage){
+    public ResponseEntity consumerSignup(@RequestPart ConsumerSignupReq memberSignupReq, @RequestPart MultipartFile profileImage){
         return ResponseEntity.ok().body(memberService.consumerSignup(memberSignupReq, profileImage));
     }
     @RequestMapping(method = RequestMethod.POST, value = "/seller/signup")

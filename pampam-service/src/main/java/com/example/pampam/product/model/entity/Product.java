@@ -31,9 +31,6 @@ public class Product {
     private Long idx;
 
     @Column(nullable = false)
-    private String productType;
-
-    @Column(nullable = false)
     @Size(max = 100)
     private String productName;
 
@@ -82,9 +79,8 @@ public class Product {
     @JoinColumn(name = "categoryIdx")
     private Category category;
 
-    public static Product dtoToEntity(PostProductRegisterReq productRegisterReq, String type, Claims sellerInfo) {
+    public static Product dtoToEntity(PostProductRegisterReq productRegisterReq, Claims sellerInfo) {
         return Product.builder()
-                .productType(type)
                 .productName(productRegisterReq.getProductName())
                 .productInfo(productRegisterReq.getProductInfo())
                 .price(productRegisterReq.getPrice())

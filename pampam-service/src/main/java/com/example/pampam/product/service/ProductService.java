@@ -1,5 +1,7 @@
 package com.example.pampam.product.service;
 
+import com.example.pampam.category.model.entity.Category;
+import com.example.pampam.category.repository.CategoryRepository;
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
@@ -32,6 +34,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ImageSaveService imageSaveService;
     private final SellerRepository sellerRepository;
+    private final CategoryRepository categoryRepository;
 
     @Value("${jwt.secret-key}")
     private String secretKey;
@@ -42,18 +45,21 @@ public class ProductService {
         Claims sellerInfo = JwtUtils.getSellerInfo(token, secretKey);
 
         if (sellerInfo.get("authority", String.class).equals("SELLER")) {
-            String type = ProductType.findType().get(productRegisterReq.getProductType());
-            Product product = productRepository.save(Product.dtoToEntity(productRegisterReq, type, sellerInfo));
-            for (MultipartFile uploadFile : images) {
-                String uploadPath = imageSaveService.uploadFile(uploadFile);
-                imageSaveService.saveFile(product.getIdx(), uploadPath);
+            Optional<Category> categoryType = categoryRepository.findById(productRegisterReq.getProductType());
+            if (categoryType.isPresent()) {
+                Product product = productRepository.save(Product.dtoToEntity(productRegisterReq, sellerInfo));
+                product.setCategory(categoryType.get());
+                for (MultipartFile uploadFile : images) {
+                    String uploadPath = imageSaveService.uploadFile(uploadFile);
+                    imageSaveService.saveFile(product.getIdx(), uploadPath);
+                }
+                PostProductRegisterRes postProductRegisterRes = PostProductRegisterRes.entityToDto(product);
+                return BaseResponse.successResponse("요청 성공", postProductRegisterRes);
+            } else {
+                return BaseResponse.failResponse(7000, "요청 실패");
             }
-
-            PostProductRegisterRes postProductRegisterRes = PostProductRegisterRes.entityToDto(product);
-            return BaseResponse.successResponse("요청 성공", postProductRegisterRes);
-
         } else {
-            return BaseResponse.failResponse(7000, "요청 실패");
+            return null;
         }
     }
 
