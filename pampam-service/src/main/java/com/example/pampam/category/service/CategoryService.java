@@ -9,6 +9,7 @@ import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
 import com.example.pampam.product.model.entity.Product;
+import com.example.pampam.product.model.entity.ProductImage;
 import com.example.pampam.product.repository.ProductRepository;
 import com.example.pampam.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
@@ -29,13 +30,19 @@ public class CategoryService {
     private String secretKey;
 
     public BaseResponse<Object> searchCategoryType(String token, String categoryType) {
+        token = JwtUtils.replaceToken(token);
         String authority = JwtUtils.getAuthority(token, secretKey);
         if (authority.equals("CONSUMER") || authority.equals("SELLER")) {
             List<Category> categoryOfProduct = categoryRepository.findAllByCategoryType(categoryType);
             List<GetSearchProductToCategory> productList = new ArrayList<>();
+            List<String> productImages = new ArrayList<>();
+
             for (Category category : categoryOfProduct) {
                 if (category.getProduct() != null) {
-                    productList.add(GetSearchProductToCategory.buildProductToCategory(category.getProduct()));
+                    for (ProductImage image : category.getProduct().getImages()) {
+                        productImages.add(image.getImagePath());
+                    }
+                    productList.add(GetSearchProductToCategory.buildProductToCategory(category.getProduct(), productImages));
                 } else {
                     throw new EcommerceApplicationException(ErrorCode.PRODUCT_NOT_FOUND);
                 }

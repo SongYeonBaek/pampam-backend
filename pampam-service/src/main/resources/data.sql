@@ -1,13 +1,13 @@
 INSERT INTO category (idx, category_type)
 VALUES
-    (1, '채소'),
-    (2, '견과류'),
-    (3, '곡류'),
-    (4, '버섯류'),
-    (5, '과일'),
-    (6, '해산물'),
-    (7, '건어물'),
-    (8, '정육'),
-    (9, '유제품'),
-    (10, '주류')
+    (1, 'Vegetable'),
+    (2, 'Nut'),
+    (3, 'Grain'),
+    (4, 'Mushroom'),
+    (5, 'Fruit'),
+    (6, 'SeaFood'),
+    (7, 'DriedFish'),
+    (8, 'Meat'),
+    (9, 'MilkProducts'),
+    (10, 'Drink')
     ON DUPLICATE KEY UPDATE idx = idx;
