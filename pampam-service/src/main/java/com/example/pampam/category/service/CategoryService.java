@@ -33,18 +33,18 @@ public class CategoryService {
         token = JwtUtils.replaceToken(token);
         String authority = JwtUtils.getAuthority(token, secretKey);
         if (authority.equals("CONSUMER") || authority.equals("SELLER")) {
-            List<Category> categoryOfProduct = categoryRepository.findAllByCategoryType(categoryType);
+//            List<Category> categoryOfProduct = categoryRepository.findAllByCategoryType(categoryType);
             List<GetSearchProductToCategory> productList = new ArrayList<>();
-            List<String> productImages = new ArrayList<>();
 
-            for (Category category : categoryOfProduct) {
-                if (category.getProduct() != null) {
-                    for (ProductImage image : category.getProduct().getImages()) {
+            Optional<Category> category = categoryRepository.findByCategoryType(categoryType);
+
+            if (category.isPresent()) {
+                for (Product product : category.get().getProducts()) {
+                    List<String> productImages = new ArrayList<>();
+                    for (ProductImage image : product.getImages()) {
                         productImages.add(image.getImagePath());
                     }
-                    productList.add(GetSearchProductToCategory.buildProductToCategory(category.getProduct(), productImages));
-                } else {
-                    throw new EcommerceApplicationException(ErrorCode.PRODUCT_NOT_FOUND);
+                    productList.add(GetSearchProductToCategory.buildProductToCategory(product, productImages));
                 }
             }
             return BaseResponse.successResponse("카테고리 조회 성공", productList);

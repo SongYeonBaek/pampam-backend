@@ -75,7 +75,7 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<OrderedProduct> orderedProducts = new ArrayList<>();
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoryIdx")
     private Category category;
 
