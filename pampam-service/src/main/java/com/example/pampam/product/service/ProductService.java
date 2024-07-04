@@ -45,7 +45,7 @@ public class ProductService {
         Claims sellerInfo = JwtUtils.getSellerInfo(token, secretKey);
 
         if (sellerInfo.get("authority", String.class).equals("SELLER")) {
-            Optional<Category> categoryType = categoryRepository.findById(productRegisterReq.getProductType());
+            Optional<Category> categoryType = categoryRepository.findById(productRegisterReq.getCategoryIdx());
             if (categoryType.isPresent()) {
                 Product product = productRepository.save(Product.dtoToEntity(productRegisterReq, sellerInfo));
                 product.setCategory(categoryType.get());
