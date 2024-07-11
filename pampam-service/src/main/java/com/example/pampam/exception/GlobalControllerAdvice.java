@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalControllerAdvice {
 
     @ExceptionHandler(value = EcommerceApplicationException.class)
-    public ResponseEntity<Object> applicationHandler(EcommerceApplicationException e) {
+    public ResponseEntity<Object> handleEcommerceApplicationException(EcommerceApplicationException e) {
         return ResponseEntity.status(e.getErrorCode().getStatus())
                 .body(BaseResponse.failResponse(e.getErrorCode().getCode(), e.getErrorCode().name()));
     }
 
     @ExceptionHandler(value = CustomJwtSignatureException.class)
-    public ResponseEntity<Object> test(CustomJwtSignatureException e) {
+    public ResponseEntity<Object> handleCustomJwtSignatureException(CustomJwtSignatureException e) {
         return ResponseEntity.status(e.getErrorCode().getStatus())
                 .body(BaseResponse.failResponse(e.getErrorCode().getCode(), e.getErrorCode().name()));    }
 
