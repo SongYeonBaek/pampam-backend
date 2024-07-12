@@ -33,20 +33,18 @@ public class CategoryService {
         token = JwtUtils.replaceToken(token);
         String authority = JwtUtils.getAuthority(token, secretKey);
         if (authority.equals("CONSUMER") || authority.equals("SELLER")) {
-//            List<Category> categoryOfProduct = categoryRepository.findAllByCategoryType(categoryType);
             List<GetSearchProductToCategory> productList = new ArrayList<>();
+            Category category = categoryRepository.findByCategoryType(categoryType).orElseThrow(() ->
+                    new EcommerceApplicationException(ErrorCode.NOT_FOUND_CATEGORY));
 
-            Optional<Category> category = categoryRepository.findByCategoryType(categoryType);
-
-            if (category.isPresent()) {
-                for (Product product : category.get().getProducts()) {
-                    List<String> productImages = new ArrayList<>();
-                    for (ProductImage image : product.getImages()) {
-                        productImages.add(image.getImagePath());
-                    }
-                    productList.add(GetSearchProductToCategory.buildProductToCategory(product, productImages));
+            for (Product product : category.getProducts()) {
+                List<String> productImages = new ArrayList<>();
+                for (ProductImage image : product.getImages()) {
+                    productImages.add(image.getImagePath());
                 }
+                productList.add(GetSearchProductToCategory.buildProductToCategory(product, productImages));
             }
+
             return BaseResponse.successResponse("카테고리 조회 성공", productList);
         } else {
             throw new EcommerceApplicationException(ErrorCode.NOT_MATCH_AUTHORITY);
@@ -57,22 +55,17 @@ public class CategoryService {
         String authority = JwtUtils.getAuthority(token, secretKey);
 
         if (authority.equals("SELLER")) {
-            Optional<Product> product = productRepository.findById(idx);
-            if (product.isPresent()) {
-                product.get().setCategory(Category.buildCategory(categoryInfo.getCategoryType()));
-                return BaseResponse.successResponse("요청 성공", "카테고리 등록 완료");
-            } else {
-                throw new EcommerceApplicationException(ErrorCode.PRODUCT_NOT_FOUND);
-            }
+            Product product = productRepository.findById(idx).orElseThrow(() ->
+                    new EcommerceApplicationException(ErrorCode.PRODUCT_NOT_FOUND));
+            product.setCategory(Category.buildCategory(categoryInfo.getCategoryType()));
+            return BaseResponse.successResponse("요청 성공", "카테고리 등록 완료");
         } else {
             throw new EcommerceApplicationException(ErrorCode.NOT_MATCH_AUTHORITY);
         }
     }
 
     public BaseResponse<List<GetCategoryListRes>> getCategoryList(String token) {
-
         String authority = JwtUtils.getAuthority(token, secretKey);
-
         if (authority.equals("CONSUMER") || authority.equals("SELLER")) {
             List<Category> categories = categoryRepository.findAll();
             List<GetCategoryListRes> categoryList = new ArrayList<>();
