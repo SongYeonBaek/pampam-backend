@@ -1,5 +1,6 @@
 package com.example.pampam.product.controller;
 
+import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
 import com.example.pampam.product.model.request.PatchProductUpdateReq;
@@ -8,6 +9,7 @@ import com.example.pampam.product.service.ProductService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -74,5 +76,11 @@ public class ProductController {
     @RequestMapping(method = RequestMethod.DELETE, value = "/delete/{idx}")
     public ResponseEntity<Object> delete(@RequestHeader(value = "Authorization") String token, @PathVariable Long idx) {
         return ResponseEntity.ok().body(productService.delete(token,idx));
+    }
+
+    @ApiOperation(value = "상품 검색")
+    @RequestMapping(method = RequestMethod.GET, value = "/search/{keyword}")
+    public ResponseEntity searchByName(@PathVariable String keyword){
+        return ResponseEntity.ok().body(productService.searchByName(keyword) );
     }
 }
