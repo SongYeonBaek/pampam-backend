@@ -9,7 +9,6 @@ import com.example.pampam.member.model.entity.Seller;
 import com.example.pampam.member.repository.SellerRepository;
 import com.example.pampam.product.model.entity.Product;
 import com.example.pampam.product.model.entity.ProductImage;
-import com.example.pampam.utils.ProductType;
 import com.example.pampam.product.model.request.PatchProductUpdateReq;
 import com.example.pampam.product.model.request.PostProductRegisterReq;
 import com.example.pampam.product.model.response.GetProductReadRes;

@@ -23,7 +23,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CartService {
     private final CartRepository cartRepository;
-    private final ConsumerRepository consumerRepository;
 
     @Value("${jwt.secret-key}")
     private String secretKey;
@@ -44,7 +43,7 @@ public class CartService {
                 throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
             }
         } else {
-            return BaseResponse.failResponse(7000, "판매자는 접근이 불가합니다.");
+            throw new EcommerceApplicationException(ErrorCode.NOT_MATCH_AUTHORITY);
         }
     }
 
@@ -69,7 +68,6 @@ public class CartService {
     public BaseResponse<String> updateCart(String token, Long cartIdx) {
         token = JwtUtils.replaceToken(token);
         Long consumerIdx = JwtUtils.getUserIdx(token, secretKey);
-
         Claims consumerInfo = JwtUtils.getConsumerInfo(token, secretKey);
 
         if (consumerIdx != null) {
@@ -82,11 +80,17 @@ public class CartService {
 
     //장바구니 삭제 - Order이 진행된 상품 삭제
     public BaseResponse<String> deleteOrderedCart(Long consumerIdx, Long productIdx) {
-        Optional<Cart> cart = cartRepository.findByConsumerIdxAndProductIdx(consumerIdx, productIdx);
-        if(cart.isPresent())
-            cartRepository.deleteById(cart.get().getIdx());
+        Cart cart = cartRepository.findByConsumerIdxAndProductIdx(consumerIdx, productIdx).orElseThrow(() ->
+                new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND));
+        cartRepository.deleteById(cart.getIdx());
         return BaseResponse.successResponse("요청 성공", "요청 성공");
-
     }
 
+//    public BaseResponse<String> deleteOrderedCart(Long consumerIdx, Long productIdx) {
+//        Optional<Cart> cart = cartRepository.findByConsumerIdxAndProductIdx(consumerIdx, productIdx);
+//        if(cart.isPresent())
+//            cartRepository.deleteById(cart.get().getIdx());
+//        return BaseResponse.successResponse("요청 성공", "요청 성공");
+//
+//    }
 }
