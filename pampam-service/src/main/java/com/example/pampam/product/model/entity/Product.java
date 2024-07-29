@@ -1,14 +1,11 @@
 package com.example.pampam.product.model.entity;
 
 import com.example.pampam.cart.model.entity.Cart;
-import com.example.pampam.category.model.entity.Category;
-import com.example.pampam.member.model.entity.Seller;
 import com.example.pampam.orders.model.entity.OrderedProduct;
 import com.example.pampam.product.model.request.PostProductRegisterReq;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.jsonwebtoken.Claims;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
@@ -46,6 +43,8 @@ public class Product {
     @Size(max = 2000)
     private String productInfo;
 
+    private Integer categoryIdx;
+
     @Column(nullable = false)
     private Integer people; // 모집 인원 수
 
@@ -62,8 +61,6 @@ public class Product {
     private Long sellerIdx;
     private String sellerEmail;
     private String sellerName;
-    private String sellerAddr;
-    private String sellerPhoneNum;
 
     // TODO: 연관관계 설정 후 외래키 지정
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -75,10 +72,6 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<OrderedProduct> orderedProducts = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoryIdx")
-    private Category category;
-
     public static Product dtoToEntity(PostProductRegisterReq productRegisterReq, Claims sellerInfo) {
         return Product.builder()
                 .productName(productRegisterReq.getProductName())
@@ -89,11 +82,10 @@ public class Product {
                 .closeAt(productRegisterReq.getCloseAt())
                 .people(productRegisterReq.getPeople())
                 .peopleCount(1)
+                .categoryIdx(productRegisterReq.getCategoryIdx())
                 .sellerIdx(sellerInfo.get("idx", Long.class))
                 .sellerEmail(sellerInfo.get("email", String.class))
                 .sellerName(sellerInfo.get("name", String.class))
-                .sellerPhoneNum(sellerInfo.get("phoneNum", String.class))
-                .sellerAddr(sellerInfo.get("address", String.class))
                 .build();
     }
 }

@@ -1,16 +1,11 @@
 package com.example.pampam.product.controller;
 
-import com.example.pampam.common.BaseResponse;
-import com.example.pampam.exception.EcommerceApplicationException;
-import com.example.pampam.exception.ErrorCode;
 import com.example.pampam.product.model.request.PatchProductUpdateReq;
 import com.example.pampam.product.model.request.PostProductRegisterReq;
 import com.example.pampam.product.service.ProductService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @CrossOrigin("*")
 public class ProductController {
     private final ProductService productService;
+
     @ApiOperation(value = "상품 등록")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "email", value = "이메일을 받기 위한 토큰 입력",
@@ -43,6 +39,11 @@ public class ProductController {
     @RequestMapping(method = RequestMethod.GET, value = "/list")
     public ResponseEntity<Object> list(Integer page, Integer size) {
         return ResponseEntity.ok().body(productService.list(page, size));
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/category")
+    public ResponseEntity<Object> getProductListWithCategory(Integer categoryIdx) {
+        return ResponseEntity.ok().body(productService.getProductListWithCategory(categoryIdx));
     }
 
     @ApiOperation(value = "상품 조회")
