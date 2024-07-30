@@ -74,4 +74,9 @@ public class OrdersController {
     public BaseResponse<String> groupCancel(Long productId) throws IOException {
         return ordersService.groupCancel(productId);
     }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/product/list")
+    public BaseResponse<String> orderedProductList(@RequestHeader(value = "Authorization") String token) throws IOException {
+        return ordersService.orderedProductList(token);
+    }
 }
