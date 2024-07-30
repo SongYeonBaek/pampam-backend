@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -78,4 +79,22 @@ public class CartService {
             throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
         }
     }
+
+    //장바구니 삭제 - Order이 진행된 상품 삭제
+    public BaseResponse<String> deleteOrderedCart(Long consumerIdx, Long productIdx) {
+        try {
+            List<Cart> carts = cartRepository.findAllByConsumerIdxAndProductIdx(consumerIdx, productIdx);
+            if (carts.isEmpty()) {
+                return BaseResponse.failResponse(7000, "요청 실패" + " 카트를 찾을 수 없습니다.");
+            }
+
+            cartRepository.deleteById(carts.get(0).getIdx());
+
+
+            return BaseResponse.successResponse("요청 성공", "요청 성공");
+        } catch (Exception e) {
+            return BaseResponse.failResponse(5000, "서버 오류가 발생했습니다.");
+        }
+    }
+
 }

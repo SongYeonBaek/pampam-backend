@@ -13,7 +13,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class PostProductRegisterReq {
     @NotBlank(message = "상품 카테고리를 입력해주세요.")
-    private Integer productType;
+    private Integer categoryIdx;
     @NotBlank(message = "상품 이름을 입력해주세요.")
     private String productName;
     @NotBlank(message = "상품 가격을 입력해주세요.")
