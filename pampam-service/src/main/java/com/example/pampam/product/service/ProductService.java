@@ -1,7 +1,5 @@
 package com.example.pampam.product.service;
 
-import com.example.pampam.category.model.entity.Category;
-import com.example.pampam.category.repository.CategoryRepository;
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
@@ -9,8 +7,8 @@ import com.example.pampam.member.model.entity.Seller;
 import com.example.pampam.member.repository.SellerRepository;
 import com.example.pampam.product.model.entity.Product;
 import com.example.pampam.product.model.entity.ProductImage;
+import com.example.pampam.product.model.response.GetProductListWithCategoryRes;
 import com.example.pampam.product.repository.ProductImageRepository;
-import com.example.pampam.utils.ProductType;
 import com.example.pampam.product.model.request.PatchProductUpdateReq;
 import com.example.pampam.product.model.request.PostProductRegisterReq;
 import com.example.pampam.product.model.response.GetProductReadRes;
@@ -23,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,9 +32,8 @@ import java.util.*;
 public class ProductService {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
-    private final com.example.pampam.product.service.ImageSaveService imageSaveService;
+    private final ImageSaveService imageSaveService;
     private final SellerRepository sellerRepository;
-    private final CategoryRepository categoryRepository;
 
     @Value("${jwt.secret-key}")
     private String secretKey;
@@ -48,19 +44,13 @@ public class ProductService {
         Claims sellerInfo = JwtUtils.getSellerInfo(token, secretKey);
 
         if (sellerInfo.get("authority", String.class).equals("SELLER")) {
-            Optional<Category> categoryType = categoryRepository.findById(productRegisterReq.getCategoryIdx());
-            if (categoryType.isPresent()) {
-                Product product = productRepository.save(Product.dtoToEntity(productRegisterReq, sellerInfo));
-                product.setCategory(categoryType.get());
-                for (MultipartFile uploadFile : images) {
-                    String uploadPath = imageSaveService.uploadFile(uploadFile);
-                    imageSaveService.saveFile(product.getIdx(), uploadPath);
-                }
-                PostProductRegisterRes postProductRegisterRes = PostProductRegisterRes.entityToDto(product);
-                return BaseResponse.successResponse("요청 성공", postProductRegisterRes);
-            } else {
-                return BaseResponse.failResponse(7000, "요청 실패");
+            Product product = productRepository.save(Product.dtoToEntity(productRegisterReq, sellerInfo));
+            for (MultipartFile uploadFile : images) {
+                String uploadPath = imageSaveService.uploadFile(uploadFile);
+                imageSaveService.saveFile(product.getIdx(), uploadPath);
             }
+            PostProductRegisterRes postProductRegisterRes = PostProductRegisterRes.entityToDto(product);
+            return BaseResponse.successResponse("요청 성공", postProductRegisterRes);
         } else {
             return null;
         }
@@ -87,6 +77,26 @@ public class ProductService {
 
         // DtoToRes
         return BaseResponse.successResponse("요청 성공", productReadResList);
+    }
+
+    public BaseResponse<List<GetProductListWithCategoryRes>> getProductListWithCategory(Integer categoryIdx) {
+        Pageable pageable = PageRequest.of(0, 12);
+        Page<Product> result = productRepository.findProductListWithCategory(pageable, categoryIdx);
+        List<GetProductListWithCategoryRes> productList = new ArrayList<>();
+
+        for (Product product : result) {
+
+            List<String> file = new ArrayList<>();
+            List<ProductImage> productImages = productImageRepository.findByProductIdx(product.getIdx());
+
+            for (ProductImage productImage : productImages) {
+                file.add(productImage.getImagePath());
+            }
+
+            productList.add(GetProductListWithCategoryRes.entityToDto(product, file));
+        }
+
+        return BaseResponse.successResponse("조회 성공", productList);
     }
 
     public BaseResponse<GetProductReadRes> read(Long idx) {
@@ -178,7 +188,7 @@ public class ProductService {
         }
     }
 
-    public List<GetProductReadRes> searchByName(String keyword){
+    public BaseResponse<List<GetProductReadRes>> searchByName(String keyword){
         List<Product> productList = productRepository.findByProductNameContaining(keyword);
 
         List<GetProductReadRes> productListRes = new ArrayList<>();
@@ -191,19 +201,10 @@ public class ProductService {
                 file.add(productImage.getImagePath());
             }
 
-
-            productListRes.add(GetProductReadRes.builder()
-                    .idx(product.getIdx())
-                    .filename(file)
-                    .peopleCount(product.getPeopleCount())
-                    .productName(product.getProductName())
-                    .price(product.getPrice())
-                    .salePrice(product.getSalePrice())
-                    .closeAt(product.getCloseAt())
-                    .build());
+            productListRes.add(GetProductReadRes.entityToDto(product, file));
         }
 
-        return productListRes;
+        return BaseResponse.successResponse("검색 성공", productListRes);
     }
 
 }

@@ -1,15 +1,17 @@
-package com.example.pampam.category.model.response;
+package com.example.pampam.product.model.response;
 
 import com.example.pampam.product.model.entity.Product;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 import java.util.List;
 
 @Builder
+@Setter
 @Getter
-public class GetSearchProductToCategory {
+public class GetProductListWithCategoryRes {
     private Long idx;
     private String productName;
     private Integer price;
@@ -21,14 +23,14 @@ public class GetSearchProductToCategory {
     private Date startAt;
     private Date closeAt;
 
-    public static GetSearchProductToCategory buildProductToCategory(Product product, List<String> productImages) {
-        return GetSearchProductToCategory.builder()
+    public static GetProductListWithCategoryRes entityToDto(Product product, List<String> filename) {
+        return GetProductListWithCategoryRes.builder()
                 .idx(product.getIdx())
                 .productName(product.getProductName())
                 .price(product.getPrice())
                 .salePrice(product.getSalePrice())
                 .productInfo(product.getProductInfo())
-                .filename(productImages)
+                .filename(filename)
                 .sellerIdx(product.getSellerIdx())
                 .peopleCount(product.getPeopleCount())
                 .startAt(product.getStartAt())

@@ -5,4 +5,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface ProductRepositoryCustom {
     public Page<Product> findList(Pageable pageable);
+
+    Page<Product> findProductListWithCategory(Pageable pageable, Integer categoryIdx);
+
 }
