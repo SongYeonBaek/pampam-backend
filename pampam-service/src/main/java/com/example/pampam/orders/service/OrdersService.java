@@ -66,6 +66,15 @@ public class OrdersService {
 
                 // 카트 삭제
                 cartService.deleteOrderedCart(consumerIdx, getPortOneRes.getId());
+
+                //공동 구매 참여 인원 증가
+                Optional<Product> product = productRepository.findById(getPortOneRes.getId());
+                if (product.isPresent()) {
+                    Product p = product.get();
+                    p.setPeopleCount(p.getPeopleCount() + 1);
+
+                    productRepository.save(p);
+                }
             }
 
             return BaseResponse.successResponse("주문 완료", orderList);
@@ -82,7 +91,7 @@ public class OrdersService {
 
         if (email != null) {
             List<Orders> orders = ordersRepository.findAllByConsumerEmail(email);
-            for(Orders order :orders){
+            for(Orders order : orders){
                 Product product = order.getOrderProductsList().get(0).getProduct();
                 result.add(OrdersListRes.dtoToEntity(order, product));
             }
