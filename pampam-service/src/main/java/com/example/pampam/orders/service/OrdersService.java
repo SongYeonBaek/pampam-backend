@@ -17,6 +17,7 @@ import com.example.pampam.orders.model.response.PostOrderInfoRes;
 import com.example.pampam.orders.repository.OrderedProductRepository;
 import com.example.pampam.orders.repository.OrdersRepository;
 import com.example.pampam.product.model.entity.Product;
+import com.example.pampam.product.model.response.GetProductReadRes;
 import com.example.pampam.product.repository.ProductRepository;
 import com.example.pampam.utils.JwtUtils;
 import com.fasterxml.jackson.databind.ser.Serializers;
@@ -60,7 +61,7 @@ public class OrdersService {
 
             // Custom Data 안에 있던 Product 리스트 하나씩 꺼내와서 OrderedProduct에 저장
             for (GetPortOneRes getPortOneRes : paymentProducts.getProducts()) {
-                orderedProductRepository.save(OrderedProduct.dtoToEntity(order, getPortOneRes));
+                orderedProductRepository.save(OrderedProduct.dtoToEntity(order, getPortOneRes, consumerIdx));
                 orderList.add(PostOrderInfoRes.dtoToEntity(order.getIdx(), impUid, getPortOneRes, order));
 
                 // 카트 삭제
@@ -107,5 +108,36 @@ public class OrdersService {
             paymentService.paymentCancel(impUid);
         }
         return  BaseResponse.successResponse("공동구매 전원 취소 완료", "[결제 취소] 인원 부족으로 인해 공동구매가 취소되었습니다.");
+    }
+
+    public BaseResponse<String> orderedProductList(String token) {
+        token = JwtUtils.replaceToken(token);
+        Long consumerIdx = JwtUtils.getUserIdx(token, secretKey);
+        List<GetProductReadRes> orderedProductList = new ArrayList<>();
+
+        if (consumerIdx != null) {
+            List<OrderedProduct> orderedProducts = orderedProductRepository.findAllByConsumerIdx(consumerIdx);
+            for(OrderedProduct orderedProduct : orderedProducts){
+                Product product = orderedProduct.getProduct();
+
+                Optional<Product> p = productRepository.findById(product.getIdx());
+                if(p.isPresent()){
+                    product = p.get();
+                    orderedProductList.add(GetProductReadRes.builder()
+                                    .idx(product.getIdx())
+                                    .closeAt(product.getCloseAt())
+                                    .peopleCount(product.getPeopleCount())
+                                    .filename(null)
+                                    .salePrice(product.getSalePrice())
+                                    .productName(product.getProductName())
+                                    .build());
+                }
+            }
+
+            return BaseResponse.successResponse("주문한 상품 목록 불러오기 완료", "");
+        }
+        return null;
+
+
     }
 }

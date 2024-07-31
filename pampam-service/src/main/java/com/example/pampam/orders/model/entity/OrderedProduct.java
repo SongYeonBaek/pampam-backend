@@ -25,10 +25,16 @@ public class OrderedProduct {
     @JoinColumn(name="Product_id")
     private Product product;
 
-    public static OrderedProduct dtoToEntity(Orders orders, GetPortOneRes getPortOneRes) {
+    private Integer status;
+
+    private Long consumerIdx;
+
+    public static OrderedProduct dtoToEntity(Orders orders, GetPortOneRes getPortOneRes, Long consumerIdx) {
         return OrderedProduct.builder()
                 .orders(orders)
                 .product(Product.builder().idx(getPortOneRes.getId()).build())
+                .status(0)
+                .consumerIdx(consumerIdx)
                 .build();
     }
 }
