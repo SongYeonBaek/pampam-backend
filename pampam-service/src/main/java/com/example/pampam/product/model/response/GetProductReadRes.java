@@ -18,6 +18,7 @@ public class GetProductReadRes {
     private String productInfo;
     private List<String> filename;
     private Long sellerIdx ;
+    private Integer people;
     private Integer peopleCount;
     private Date startAt;
     private Date closeAt;
@@ -31,6 +32,7 @@ public class GetProductReadRes {
                 .productInfo(product.getProductInfo())
                 .filename(filename)
                 .sellerIdx(product.getSellerIdx())
+                .people(product.getPeople())
                 .peopleCount(product.getPeopleCount())
                 .startAt(product.getStartAt())
                 .closeAt(product.getCloseAt())

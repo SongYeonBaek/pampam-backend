@@ -82,7 +82,7 @@ public class OrdersService {
 
         if (email != null) {
             List<Orders> orders = ordersRepository.findAllByConsumerEmail(email);
-            for(Orders order :orders){
+            for(Orders order : orders){
                 Product product = order.getOrderProductsList().get(0).getProduct();
                 result.add(OrdersListRes.dtoToEntity(order, product));
             }
