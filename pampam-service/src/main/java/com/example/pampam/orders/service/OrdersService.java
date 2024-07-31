@@ -66,6 +66,15 @@ public class OrdersService {
 
                 // 카트 삭제
                 cartService.deleteOrderedCart(consumerIdx, getPortOneRes.getId());
+
+                //공동 구매 참여 인원 증가
+                Optional<Product> product = productRepository.findById(getPortOneRes.getId());
+                if (product.isPresent()) {
+                    Product p = product.get();
+                    p.setPeopleCount(p.getPeopleCount() + 1);
+
+                    productRepository.save(p);
+                }
             }
 
             return BaseResponse.successResponse("주문 완료", orderList);
