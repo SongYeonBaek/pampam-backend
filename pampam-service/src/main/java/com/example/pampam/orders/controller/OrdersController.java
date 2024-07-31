@@ -8,12 +8,11 @@ import com.example.pampam.orders.model.response.OrdersListRes;
 import com.example.pampam.orders.model.response.PostOrderInfoRes;
 import com.example.pampam.orders.service.OrdersService;
 import com.example.pampam.orders.service.PaymentService;
+import com.example.pampam.product.model.response.GetProductReadRes;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
 
@@ -80,7 +79,7 @@ public class OrdersController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/product/list")
-    public BaseResponse<String> orderedProductList(@RequestHeader(value = "Authorization") String token) throws IOException {
+    public BaseResponse<List<GetProductReadRes>> orderedProductList(@RequestHeader(value = "Authorization") String token) throws IOException {
         return ordersService.orderedProductList(token);
     }
 }
