@@ -7,6 +7,7 @@ import com.example.pampam.exception.ErrorCode;
 import com.example.pampam.orders.model.entity.OrderedProduct;
 import com.example.pampam.orders.model.entity.Orders;
 import com.example.pampam.orders.model.entity.PaymentProducts;
+import com.example.pampam.orders.model.response.GetOrderedProductList;
 import com.example.pampam.orders.model.response.GetPortOneRes;
 import com.example.pampam.orders.model.response.OrdersListRes;
 import com.example.pampam.orders.model.response.PostOrderInfoRes;
@@ -110,10 +111,10 @@ public class OrdersService {
         return  BaseResponse.successResponse("공동구매 전원 취소 완료", "[결제 취소] 인원 부족으로 인해 공동구매가 취소되었습니다.");
     }
 
-    public BaseResponse<List<GetProductReadRes>> orderedProductList(String token) {
+    public BaseResponse<List<GetOrderedProductList>> orderedProductList(String token) {
         token = JwtUtils.replaceToken(token);
         Long consumerIdx = JwtUtils.getUserIdx(token, secretKey);
-        List<GetProductReadRes> orderedProductList = new ArrayList<>();
+        List<GetOrderedProductList> orderedProductList = new ArrayList<>();
         List<String> images = new ArrayList<>();
 
         if (consumerIdx != null) {
@@ -129,7 +130,7 @@ public class OrdersService {
                         images.add(image.getImagePath());
                     }
 
-                    orderedProductList.add(GetProductReadRes.entityToDto(product, images));
+                    orderedProductList.add(GetOrderedProductList.entityToDto(product, images, orderedProduct.getStatus()));
                 }
             }
 
