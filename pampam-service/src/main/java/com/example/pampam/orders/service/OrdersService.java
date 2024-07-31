@@ -1,38 +1,30 @@
 package com.example.pampam.orders.service;
 
-import com.example.pampam.cart.model.entity.Cart;
-import com.example.pampam.cart.repository.CartRepository;
 import com.example.pampam.cart.service.CartService;
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
-import com.example.pampam.member.model.entity.Consumer;
-import com.example.pampam.member.repository.ConsumerRepository;
 import com.example.pampam.orders.model.entity.OrderedProduct;
 import com.example.pampam.orders.model.entity.Orders;
 import com.example.pampam.orders.model.entity.PaymentProducts;
+import com.example.pampam.orders.model.response.GetOrderedProductList;
 import com.example.pampam.orders.model.response.GetPortOneRes;
 import com.example.pampam.orders.model.response.OrdersListRes;
 import com.example.pampam.orders.model.response.PostOrderInfoRes;
 import com.example.pampam.orders.repository.OrderedProductRepository;
 import com.example.pampam.orders.repository.OrdersRepository;
 import com.example.pampam.product.model.entity.Product;
+import com.example.pampam.product.model.entity.ProductImage;
 import com.example.pampam.product.model.response.GetProductReadRes;
 import com.example.pampam.product.repository.ProductRepository;
 import com.example.pampam.utils.JwtUtils;
-import com.fasterxml.jackson.databind.ser.Serializers;
-import com.google.gson.Gson;
 import com.siot.IamportRestClient.exception.IamportResponseException;
-import com.siot.IamportRestClient.response.IamportResponse;
-import com.siot.IamportRestClient.response.Payment;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -119,31 +111,30 @@ public class OrdersService {
         return  BaseResponse.successResponse("공동구매 전원 취소 완료", "[결제 취소] 인원 부족으로 인해 공동구매가 취소되었습니다.");
     }
 
-    public BaseResponse<String> orderedProductList(String token) {
+    public BaseResponse<List<GetOrderedProductList>> orderedProductList(String token) {
         token = JwtUtils.replaceToken(token);
         Long consumerIdx = JwtUtils.getUserIdx(token, secretKey);
-        List<GetProductReadRes> orderedProductList = new ArrayList<>();
+        List<GetOrderedProductList> orderedProductList = new ArrayList<>();
+        List<String> images = new ArrayList<>();
 
         if (consumerIdx != null) {
             List<OrderedProduct> orderedProducts = orderedProductRepository.findAllByConsumerIdx(consumerIdx);
             for(OrderedProduct orderedProduct : orderedProducts){
                 Product product = orderedProduct.getProduct();
-
                 Optional<Product> p = productRepository.findById(product.getIdx());
+
                 if(p.isPresent()){
                     product = p.get();
-                    orderedProductList.add(GetProductReadRes.builder()
-                                    .idx(product.getIdx())
-                                    .closeAt(product.getCloseAt())
-                                    .peopleCount(product.getPeopleCount())
-                                    .filename(null)
-                                    .salePrice(product.getSalePrice())
-                                    .productName(product.getProductName())
-                                    .build());
+
+                    for (ProductImage image : product.getImages()) {
+                        images.add(image.getImagePath());
+                    }
+
+                    orderedProductList.add(GetOrderedProductList.entityToDto(product, images, orderedProduct.getStatus()));
                 }
             }
 
-            return BaseResponse.successResponse("주문한 상품 목록 불러오기 완료", "");
+            return BaseResponse.successResponse("주문한 상품 목록 불러오기 완료", orderedProductList);
         }
         return null;
 
