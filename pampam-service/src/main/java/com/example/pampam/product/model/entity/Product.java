@@ -51,10 +51,10 @@ public class Product {
     @Column(nullable = false)
     private Integer peopleCount; // 모인 인원 수
 
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM.dd HH.mm", timezone="Asia/Seoul")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM.dd", timezone="Asia/Seoul")
     private Date startAt;
 
-    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm", timezone="Asia/Seoul")
+    @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd", timezone="Asia/Seoul")
     private Date closeAt;
 
     // 판매자 정보
