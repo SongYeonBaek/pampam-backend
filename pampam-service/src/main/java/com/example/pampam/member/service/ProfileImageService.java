@@ -2,6 +2,9 @@ package com.example.pampam.member.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.example.pampam.member.model.entity.Consumer;
+import com.example.pampam.member.model.entity.ProfileImage;
+import com.example.pampam.member.repository.ProfileImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,11 +15,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ProfileImageService {
+
+    private final ProfileImageRepository profileImageRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -58,5 +64,19 @@ public class ProfileImageService {
         }
 
         return s3.getUrl(bucket, saveFileName.replace(File.separator, "/")).toString();
+    }
+
+    public void saveProfileImage(MultipartFile profileImage, Consumer consumer) {
+        String imageAddr = saveProfileImage(profileImage);
+        ProfileImage profile = profileImageRepository.save(ProfileImage.buildProfileImage(imageAddr, consumer));
+        saveProfileImage(profileImage);
+    }
+
+    public String findProfileImage(String email) {
+        Optional<ProfileImage> profileImage = profileImageRepository.findByConsumerEmail(email);
+        if (profileImage.isPresent()) {
+            return profileImage.get().getImagePath();
+        }
+        return null;
     }
 }

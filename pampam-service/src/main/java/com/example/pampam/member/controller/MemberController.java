@@ -65,6 +65,12 @@ public class MemberController {
         return emailVerifyService.verify(getEmailConfirmReq);
 
     }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/profile")
+    public ResponseEntity getProfileImage(String email) {
+        return ResponseEntity.ok().body(memberService.getConsumerProfileImage(email));
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "/kakao")
     // 인가 코드 받아오는 코드
     public ResponseEntity kakao(String code) {
