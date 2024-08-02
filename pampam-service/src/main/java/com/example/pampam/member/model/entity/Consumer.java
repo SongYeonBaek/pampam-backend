@@ -38,12 +38,9 @@ public class Consumer implements UserDetails {
     private Boolean socialLogin;
     private Boolean status;         // email 인증 여부
 
+    @OneToOne(mappedBy = "consumer")
+    private ProfileImage profileImage;
 
-//    @OneToMany(fetch = FetchType.LAZY,mappedBy = "consumer")
-//    private List<Orders> ordersList = new ArrayList<>();
-
-
-    // TODO: builder 패턴 적용
     public static Consumer buildConsumer(ConsumerSignupReq consumerSignupReq, String consumerPW) {
         return Consumer.builder()
                 .email(consumerSignupReq.getEmail())

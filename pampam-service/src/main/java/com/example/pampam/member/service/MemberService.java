@@ -11,6 +11,7 @@ import com.example.pampam.member.repository.ConsumerRepository;
 import com.example.pampam.member.repository.SellerRepository;
 import com.example.pampam.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -31,6 +32,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MemberService implements UserDetailsService {
     private final ConsumerRepository consumerRepository;
     private final SellerRepository sellerRepository;
@@ -53,16 +55,9 @@ public class MemberService implements UserDetailsService {
 
         Consumer consumer = consumerRepository.save(Consumer.buildConsumer(consumerSignupReq, passwordEncoder.encode(consumerSignupReq.getConsumerPW())));
 
-//        Consumer consumer = consumerRepository.save(Consumer.builder()
-//                .email(consumerSignupReq.getEmail())
-//                .consumerPW(passwordEncoder.encode(consumerSignupReq.getConsumerPW()))
-//                .consumerName(consumerSignupReq.getConsumerName())
-//                .consumerAddr(consumerSignupReq.getConsumerAddr())
-//                .consumerPhoneNum(consumerSignupReq.getConsumerPhoneNum())
-//                .authority("CONSUMER")
-//                .socialLogin(false)
-//                .status(false)
-//                .build());
+        if (profileImage != null) {
+            profileImageService.saveProfileImage(profileImage, consumer);
+        }
 
         String accessToken = JwtUtils.generateAccessToken(consumer, secretKey, expiredTimeMs);
 
@@ -276,6 +271,12 @@ public class MemberService implements UserDetailsService {
         }
         return BaseResponse.failResponse(7000, "요청실패");
 
+    }
+
+    public BaseResponse getConsumerProfileImage(String email) {
+
+        String imageAddr = profileImageService.findProfileImage(email);
+        return BaseResponse.successResponse("요청 성공", GetProfileImageRes.buildProfileImageRes(imageAddr));
     }
 
     public Consumer getMemberByConsumerID(String email) {

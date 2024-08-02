@@ -12,11 +12,12 @@ import java.security.Key;
 import java.util.Date;
 
 public class JwtUtils {
-    public static String generateAccessToken(Consumer member, String key, int expiredTimeMs) {
+    public static String generateAccessToken(Consumer consumer, String key, int expiredTimeMs) {
         Claims claims = Jwts.claims();
-        claims.put("email", member.getEmail());
-        claims.put("idx", member.getConsumerIdx());
-        claims.put("authority", member.getAuthority());
+        claims.put("email", consumer.getEmail());
+        claims.put("idx", consumer.getConsumerIdx());
+        claims.put("authority", consumer.getAuthority());
+//        claims.put("profileImage", consumer.getProfileImage().getImagePath());
 
         String token = Jwts.builder()
                 .setClaims(claims)
