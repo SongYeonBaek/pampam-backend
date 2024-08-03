@@ -57,7 +57,7 @@ public class OrdersController {
             required = true, paramType = "query", dataType = "string", defaultValue = "")
     @RequestMapping(method = RequestMethod.GET,value = "/list")
     public BaseResponse<List<OrdersListRes>>  orderList(@RequestHeader(value = "Authorization") String token) {
-        return ordersService.orderList(token);
+    return ordersService.orderList(token);
     }
 
     //Consumer가 구매를 취소
