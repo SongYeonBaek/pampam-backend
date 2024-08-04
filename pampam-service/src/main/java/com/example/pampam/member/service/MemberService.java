@@ -1,7 +1,5 @@
 package com.example.pampam.member.service;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.member.model.entity.Consumer;
 import com.example.pampam.member.model.entity.Seller;
@@ -13,8 +11,6 @@ import com.example.pampam.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,12 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -44,11 +35,11 @@ public class MemberService implements UserDetailsService {
     private String secretKey;
 
     @Value("${jwt.token.expired-time-ms}")
-    private int expiredTimeMs;
+    private Integer expiredTimeMs;
 
 
     @Transactional
-    public BaseResponse consumerSignup(ConsumerSignupReq consumerSignupReq, MultipartFile profileImage) {
+    public BaseResponse<ConsumerSignupRes> consumerSignup(ConsumerSignupReq consumerSignupReq, MultipartFile profileImage) {
         if (consumerRepository.findByEmail(consumerSignupReq.getEmail()).isPresent()) {
             return BaseResponse.failResponse(7000, "요청실패");
         }
@@ -61,89 +52,42 @@ public class MemberService implements UserDetailsService {
 
         String accessToken = JwtUtils.generateAccessToken(consumer, secretKey, expiredTimeMs);
 
-        SendEmailReq sendEmailReq = SendEmailReq.builder()
-                .email(consumer.getEmail())
-                .authority(consumer.getAuthority())
-                .accessToken(accessToken)
-                .build();
-
+        SendEmailReq sendEmailReq = SendEmailReq.buildSendEmailReq(consumer, accessToken);
         emailVerifyService.sendEmail(sendEmailReq);
+
         Optional<Consumer> result = consumerRepository.findByEmail(consumer.getEmail());
 
         if (result.isPresent()){
             consumer = result.get();
         }
 
-        ConsumerSignupRes consumerSignupRes = ConsumerSignupRes.builder()
-                .consumerIdx(consumer.getConsumerIdx())
-                .email(consumer.getEmail())
-                .consumerPW(consumer.getConsumerPW())
-                .consumerName(consumer.getConsumerName())
-                .consumerAddr(consumer.getConsumerAddr())
-                .consumerPhoneNum(consumer.getConsumerPhoneNum())
-                .authority(consumer.getAuthority())
-                .socialLogin(consumer.getSocialLogin())
-                .status(consumer.getStatus())
-                .build();
-
-        BaseResponse baseResponse = BaseResponse.successResponse("요청성공",consumerSignupRes);
-
-        return baseResponse;
+        return BaseResponse.successResponse("요청성공",ConsumerSignupRes.buildConsumerSignupRes(consumer));
 
     }
-    public BaseResponse sellerSignup(SellerSignupReq sellerSignupReq, MultipartFile image) {
+    public BaseResponse<SellerSignupRes> sellerSignup(SellerSignupReq sellerSignupReq, MultipartFile image) {
+
         if (sellerRepository.findByEmail(sellerSignupReq.getEmail()).isPresent()) {
             return BaseResponse.failResponse(7000, "요청실패");
         }
-        String saveFileName = profileImageService.saveProfileImage(image);
-        Seller seller = sellerRepository.save(Seller.builder()
-                .email(sellerSignupReq.getEmail())
-                .sellerPW(passwordEncoder.encode(sellerSignupReq.getSellerPW()))
-                .sellerName(sellerSignupReq.getSellerName())
-                .sellerAddr(sellerSignupReq.getSellerAddr())
-                .sellerPhoneNum(sellerSignupReq.getSellerPhoneNum())
-                .sellerBusinessNumber(sellerSignupReq.getSellerBusinessNumber())
-                .authority("SELLER")
-                .status(false)
-                .image(saveFileName)
-                .build());
 
+        String saveFileName = profileImageService.saveProfileImage(image);
+        sellerSignupReq.setSellerPW(passwordEncoder.encode(sellerSignupReq.getSellerPW()));
+
+        Seller seller = sellerRepository.save(Seller.buildSeller(sellerSignupReq, saveFileName));
         String accessToken = JwtUtils.generateAccessToken(seller, secretKey, expiredTimeMs);
 
-        SendEmailReq sendEmailReq = SendEmailReq.builder()
-                .email(seller.getEmail())
-                .authority(seller.getAuthority())
-                .accessToken(accessToken)
-                .build();
-
+        SendEmailReq sendEmailReq = SendEmailReq.buildSendEmailReq(seller, accessToken);
         emailVerifyService.sendEmail(sendEmailReq);
-        SellerSignupRes sellerSignupRes = SellerSignupRes.builder()
-                .sellerIdx(seller.getSellerIdx())
-                .email(seller.getEmail())
-                .sellerPW(seller.getSellerPW())
-                .sellerName(seller.getSellerName())
-                .sellerAddr(seller.getSellerAddr())
-                .sellerPhoneNum(seller.getSellerPhoneNum())
-                .sellerPhoneNum(seller.getSellerPhoneNum())
-                .authority(seller.getAuthority())
-                .status(seller.getStatus())
-                .sellerBusinessNumber(seller.getSellerBusinessNumber())
-                .image(seller.getImage())
-                .build();
 
-        BaseResponse baseResponse = BaseResponse.successResponse("요청성공", sellerSignupRes);
-        return baseResponse;
+        return BaseResponse.successResponse("요청성공", SellerSignupRes.buildSellerSignupRes(seller));
     }
 
-    public BaseResponse consumerLogin(ConsumerLoginReq consumerLoginReq) {
+    public BaseResponse<ConsumerLoginRes> consumerLogin(ConsumerLoginReq consumerLoginReq) {
         Optional<Consumer> consumer = consumerRepository.findByEmail(consumerLoginReq.getEmail());
         if (consumer.isPresent()) {
             if (passwordEncoder.matches(consumerLoginReq.getPassword(), consumer.get().getPassword())) {
-                ConsumerLoginRes consumerLoginRes = ConsumerLoginRes.builder()
-                        .token(JwtUtils.generateAccessToken(consumer.get(), secretKey, expiredTimeMs))
-                        .build();
-                BaseResponse baseResponse = BaseResponse.successResponse("요청성공", consumerLoginRes);
-                return baseResponse;
+                ConsumerLoginRes consumerLoginRes = ConsumerLoginRes.buildConsumerLoginRes(consumer.get(), secretKey, expiredTimeMs);
+                return BaseResponse.successResponse("요청성공", consumerLoginRes);
             }else {
                 return BaseResponse.failResponse(7000, "요청실패");
             }
@@ -151,15 +95,12 @@ public class MemberService implements UserDetailsService {
         return BaseResponse.failResponse(7000, "요청실패");
     }
 
-    public BaseResponse sellerLogin(SellerLoginReq sellerLoginReq) {
+    public BaseResponse<SellerLoginRes> sellerLogin(SellerLoginReq sellerLoginReq) {
         Optional<Seller> seller = sellerRepository.findByEmail(sellerLoginReq.getEmail());
         if (seller.isPresent()) {
             if (passwordEncoder.matches(sellerLoginReq.getPassword(), seller.get().getPassword())) {
-                SellerLoginRes sellerLoginRes = SellerLoginRes.builder()
-                        .token(JwtUtils.generateAccessToken(seller.get(), secretKey, expiredTimeMs))
-                        .build();
-                BaseResponse baseResponse = BaseResponse.successResponse("요청성공",sellerLoginRes);
-                return  baseResponse;
+                SellerLoginRes sellerLoginRes = SellerLoginRes.buildSellerLoginRes(seller.get(), secretKey, expiredTimeMs);
+                return  BaseResponse.successResponse("요청성공",sellerLoginRes);
             }else {
                 return BaseResponse.failResponse(7000, "요청실패");
             }
@@ -167,79 +108,32 @@ public class MemberService implements UserDetailsService {
         return BaseResponse.failResponse(7000, "요청실패");
     }
 
-    public BaseResponse consumerUpdate(ConsumerUpdateReq consumerUpdateReq) {
+    public BaseResponse<ConsumerUpdateRes> consumerUpdate(ConsumerUpdateReq consumerUpdateReq) {
         Optional<Consumer> result = consumerRepository.findByEmail(consumerUpdateReq.getEmail());
         Consumer consumer = null;
         if (result.isPresent()) {
             consumer = result.get();
-            consumer = Consumer.builder()
-                    .consumerIdx(consumer.getConsumerIdx())
-                    .email(consumerUpdateReq.getEmail())
-                    .consumerPW(passwordEncoder.encode(consumerUpdateReq.getConsumerPW()))
-                    .consumerName(consumerUpdateReq.getConsumerName())
-                    .consumerAddr(consumerUpdateReq.getConsumerAddr())
-                    .consumerPhoneNum(consumerUpdateReq.getConsumerPhoneNum())
-                    .authority(consumer.getAuthority())
-                    .socialLogin(consumer.getSocialLogin())
-                    .status(consumer.getStatus())
-                    .build();
+            consumerUpdateReq.setConsumerPW(passwordEncoder.encode(consumerUpdateReq.getConsumerPW()));
+            consumer = Consumer.buildConsumerUpdate(consumer, consumerUpdateReq);
             consumerRepository.save(consumer);
 
-            ConsumerUpdateRes consumerUpdateRes = ConsumerUpdateRes.builder()
-                    .consumerIdx(consumer.getConsumerIdx())
-                    .email(consumer.getEmail())
-                    .consumerPW(consumer.getConsumerPW())
-                    .consumerName(consumer.getConsumerName())
-                    .consumerAddr(consumer.getConsumerAddr())
-                    .consumerPhoneNum(consumer.getConsumerPhoneNum())
-                    .socialLogin(consumer.getSocialLogin())
-                    .authority(consumer.getAuthority())
-                    .status(consumer.getStatus())
-                    .build();
-
-            BaseResponse baseResponse = BaseResponse.successResponse("요청성공", consumerUpdateRes);
-
-
-            return baseResponse;
+            return BaseResponse.successResponse("요청성공", ConsumerUpdateRes.buildConsumerUpdateRes(consumer));
         } else {
             return BaseResponse.failResponse(7000, "요청실패");
         }
     }
 
-    public BaseResponse sellerUpdate(SellerUpdateReq sellerUpdateReq) {
+    public BaseResponse<SellerUpdateRes> sellerUpdate(SellerUpdateReq sellerUpdateReq) {
         Optional<Seller> result = sellerRepository.findByEmail(sellerUpdateReq.getEmail());
         Seller seller = null;
+
         if (result.isPresent()) {
             seller = result.get();
-            seller = Seller.builder()
-                    .sellerIdx(seller.getSellerIdx())
-                    .email(sellerUpdateReq.getEmail())
-                    .sellerPW(passwordEncoder.encode(sellerUpdateReq.getSellerPW()))
-                    .sellerName(sellerUpdateReq.getSellerName())
-                    .sellerAddr(sellerUpdateReq.getSellerAddr())
-                    .sellerPhoneNum(sellerUpdateReq.getSellerPhoneNum())
-                    .authority(seller.getAuthority())
-                    .sellerBusinessNumber(sellerUpdateReq.getSellerBusinessNumber())
-                    .status(seller.getStatus())
-                    .build();
+            sellerUpdateReq.setSellerPW(passwordEncoder.encode(sellerUpdateReq.getSellerPW()));
+            seller = Seller.buildSellerUpdate(seller, sellerUpdateReq);
             sellerRepository.save(seller);
 
-            SellerUpdateRes sellerUpdateRes = SellerUpdateRes.builder()
-                    .sellerIdx(seller.getSellerIdx())
-                    .email(seller.getEmail())
-                    .sellerPW(seller.getSellerPW())
-                    .sellerName(seller.getSellerName())
-                    .sellerAddr(seller.getSellerAddr())
-                    .sellerPhoneNum(seller.getSellerPhoneNum())
-                    .sellerBusinessNumber(seller.getSellerBusinessNumber())
-                    .authority(seller.getAuthority())
-                    .status(seller.getStatus())
-                    .build();
-
-            BaseResponse baseResponse = BaseResponse.successResponse("요청성공", sellerUpdateRes);
-
-
-            return baseResponse;
+            return BaseResponse.successResponse("요청성공", SellerUpdateRes.buildSellerUpdateRes(seller));
 
         } else {
             return null;
@@ -247,34 +141,26 @@ public class MemberService implements UserDetailsService {
 
     }
 
-    public BaseResponse consumerDelete(ConsumerDeleteReq consumerDeleteReq) {
+    public BaseResponse<ConsumerDeleteRes> consumerDelete(ConsumerDeleteReq consumerDeleteReq) {
         Optional<Consumer> result = consumerRepository.findByEmail(consumerDeleteReq.getEmail());
         if (result.isPresent()) {
-            consumerRepository.delete(Consumer.builder()
-                    .consumerIdx(result.get().getConsumerIdx()).build());
-            ConsumerDeleteRes consumerDeleteRes = ConsumerDeleteRes.builder().email(consumerDeleteReq.getEmail()).build();
-            return BaseResponse.successResponse("요청성공", consumerDeleteRes);
+            consumerRepository.delete(result.get());
+            return BaseResponse.successResponse("요청성공", ConsumerDeleteRes.buildConsumerDeleteRes(consumerDeleteReq));
         }
         return BaseResponse.failResponse(7000, "요청실패");
 
     }
-    public BaseResponse sellerDelete(SellerDeleteReq sellerDeleteReq) {
+    public BaseResponse<SellerDeleteRes> sellerDelete(SellerDeleteReq sellerDeleteReq) {
         Optional<Seller> result = sellerRepository.findByEmail(sellerDeleteReq.getEmail());
-
         if (result.isPresent()) {
             sellerRepository.delete(result.get());
-
-            SellerDeleteRes sellerDeleteRes = SellerDeleteRes.builder().email(sellerDeleteReq.getEmail()).build();
-            BaseResponse baseResponse = BaseResponse.successResponse("요청성공", sellerDeleteRes);
-
-            return baseResponse;
+            return BaseResponse.successResponse("요청성공", SellerDeleteRes.buildSellerDeleteRes(sellerDeleteReq));
         }
         return BaseResponse.failResponse(7000, "요청실패");
 
     }
 
-    public BaseResponse getConsumerProfileImage(String email) {
-
+    public BaseResponse<GetProfileImageRes> getConsumerProfileImage(String email) {
         String imageAddr = profileImageService.findProfileImage(email);
         return BaseResponse.successResponse("요청 성공", GetProfileImageRes.buildProfileImageRes(imageAddr));
     }
