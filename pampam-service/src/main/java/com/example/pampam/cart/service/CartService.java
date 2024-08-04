@@ -7,7 +7,6 @@ import com.example.pampam.cart.repository.CartRepository;
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
-import com.example.pampam.member.repository.ConsumerRepository;
 import com.example.pampam.product.model.entity.Product;
 import com.example.pampam.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
@@ -17,13 +16,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CartService {
     private final CartRepository cartRepository;
-    private final ConsumerRepository consumerRepository;
 
     @Value("${jwt.secret-key}")
     private String secretKey;
@@ -36,8 +33,8 @@ public class CartService {
 
         if (authority.equals("CONSUMER")) {
             if (consumerIdx != null) {
-                Cart cart = cartRepository.save(Cart.cartBuilder(productIdx, consumerIdx));
-                PostCartInRes product = PostCartInRes.entityToDto(cart);
+                Cart cart = cartRepository.save(Cart.buildCart(productIdx, consumerIdx));
+                PostCartInRes product = PostCartInRes.buildPostCartInRes(cart);
 
                 return BaseResponse.successResponse("요청 성공", product);
             } else {
@@ -58,7 +55,7 @@ public class CartService {
 
             for (Cart cart : carts) {
                 Product product = cart.getProduct();
-                cartList.add(GetCartListRes.entityToDto(cart, product));
+                cartList.add(GetCartListRes.buildGetCartListRes(cart, product));
             }
             return BaseResponse.successResponse("요청 성공", cartList);
         } else {
@@ -69,7 +66,6 @@ public class CartService {
     public BaseResponse<String> updateCart(String token, Long cartIdx) {
         token = JwtUtils.replaceToken(token);
         Long consumerIdx = JwtUtils.getUserIdx(token, secretKey);
-
         Claims consumerInfo = JwtUtils.getConsumerInfo(token, secretKey);
 
         if (consumerIdx != null) {
@@ -80,7 +76,6 @@ public class CartService {
         }
     }
 
-    //장바구니 삭제 - Order이 진행된 상품 삭제
     public BaseResponse<String> deleteOrderedCart(Long consumerIdx, Long productIdx) {
         try {
             List<Cart> carts = cartRepository.findAllByConsumerIdxAndProductIdx(consumerIdx, productIdx);
@@ -89,8 +84,6 @@ public class CartService {
             }
 
             cartRepository.deleteById(carts.get(0).getIdx());
-
-
             return BaseResponse.successResponse("요청 성공", "요청 성공");
         } catch (Exception e) {
             return BaseResponse.failResponse(5000, "서버 오류가 발생했습니다.");

@@ -1,6 +1,5 @@
 package com.example.pampam.cart.model.entity;
 
-import com.example.pampam.member.model.entity.Consumer;
 import com.example.pampam.product.model.entity.Product;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +25,7 @@ public class Cart {
     @JoinColumn(name = "product_idx")
     private Product product;
 
-    public static Cart cartBuilder(Long productIdx, Long consumerIdx) {
+    public static Cart buildCart(Long productIdx, Long consumerIdx) {
         return Cart.builder()
                 .product(Product.builder().idx(productIdx).build())
                 .consumerIdx(consumerIdx)

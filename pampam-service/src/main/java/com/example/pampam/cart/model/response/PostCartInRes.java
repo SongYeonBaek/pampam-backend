@@ -12,7 +12,7 @@ public class PostCartInRes {
     private Long productId;
     private String productName;
 
-    public static PostCartInRes entityToDto(Cart cart) {
+    public static PostCartInRes buildPostCartInRes(Cart cart) {
         return PostCartInRes.builder()
                 .productId(cart.getProduct().getIdx())
                 .productName(cart.getProduct().getProductName())
