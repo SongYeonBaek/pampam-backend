@@ -3,6 +3,7 @@ package com.example.pampam.member.controller;
 import com.example.pampam.common.BaseResponse;
 import com.example.pampam.member.model.entity.Consumer;
 import com.example.pampam.member.model.request.*;
+import com.example.pampam.member.model.response.ConsumerDeleteRes;
 import com.example.pampam.member.service.EmailVerifyService;
 import com.example.pampam.member.service.KakaoService;
 import com.example.pampam.member.service.MemberService;
@@ -50,8 +51,7 @@ public class MemberController {
         return ResponseEntity.ok().body(memberService.sellerUpdate(sellerUpdateReq));
     }
     @RequestMapping(method = RequestMethod.DELETE, value = "/consumer/delete")
-    public ResponseEntity<BaseResponse<String>> consumerDelete(@RequestBody ConsumerDeleteReq consumerDeleteReq){
-
+    public ResponseEntity<BaseResponse<ConsumerDeleteRes>> consumerDelete(@RequestBody ConsumerDeleteReq consumerDeleteReq){
         return ResponseEntity.ok().body(memberService.consumerDelete(consumerDeleteReq));
     }
     @RequestMapping(method = RequestMethod.DELETE, value = "/seller/delete")
@@ -65,6 +65,12 @@ public class MemberController {
         return emailVerifyService.verify(getEmailConfirmReq);
 
     }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/profile")
+    public ResponseEntity getProfileImage(String email) {
+        return ResponseEntity.ok().body(memberService.getConsumerProfileImage(email));
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "/kakao")
     // 인가 코드 받아오는 코드
     public ResponseEntity kakao(String code) {

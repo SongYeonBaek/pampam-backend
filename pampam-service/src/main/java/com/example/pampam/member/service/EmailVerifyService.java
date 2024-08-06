@@ -71,10 +71,7 @@ public class EmailVerifyService {
         }
     }
     private void create(String email, String uuid) {
-        EmailVerify emailVerify = EmailVerify.builder()
-                .email(email)
-                .uuid(uuid)
-                .build();
+        EmailVerify emailVerify = EmailVerify.buildEmailVerify(email, uuid);
         emailVerifyRepository.save(emailVerify);
     }
 }

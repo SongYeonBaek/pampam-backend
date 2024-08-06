@@ -4,6 +4,7 @@ import com.example.pampam.common.BaseResponse;
 import com.example.pampam.exception.EcommerceApplicationException;
 import com.example.pampam.exception.ErrorCode;
 import com.example.pampam.orders.model.entity.PaymentValidationResult;
+import com.example.pampam.orders.model.response.GetOrderedProductList;
 import com.example.pampam.orders.model.response.OrdersListRes;
 import com.example.pampam.orders.model.response.PostOrderInfoRes;
 import com.example.pampam.orders.service.OrdersService;
@@ -56,7 +57,7 @@ public class OrdersController {
             required = true, paramType = "query", dataType = "string", defaultValue = "")
     @RequestMapping(method = RequestMethod.GET,value = "/list")
     public BaseResponse<List<OrdersListRes>>  orderList(@RequestHeader(value = "Authorization") String token) {
-        return ordersService.orderList(token);
+    return ordersService.orderList(token);
     }
 
     //Consumer가 구매를 취소
@@ -79,7 +80,7 @@ public class OrdersController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/product/list")
-    public BaseResponse<List<GetProductReadRes>> orderedProductList(@RequestHeader(value = "Authorization") String token) throws IOException {
+    public BaseResponse<List<GetOrderedProductList>> orderedProductList(@RequestHeader(value = "Authorization") String token) throws IOException {
         return ordersService.orderedProductList(token);
     }
 }

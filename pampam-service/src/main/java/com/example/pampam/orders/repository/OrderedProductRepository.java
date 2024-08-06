@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface OrderedProductRepository extends JpaRepository<OrderedProduct, Integer> {
     List<OrderedProduct> findAllByConsumerIdx(Long consumerIdx);
+
+    List<OrderedProduct> findAllByProductIdx(Long productIdx);
 }

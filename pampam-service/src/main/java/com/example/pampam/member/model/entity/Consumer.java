@@ -3,6 +3,7 @@ package com.example.pampam.member.model.entity;
 
 import com.example.pampam.cart.model.entity.Cart;
 import com.example.pampam.member.model.request.ConsumerSignupReq;
+import com.example.pampam.member.model.request.ConsumerUpdateReq;
 import com.example.pampam.orders.model.entity.Orders;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -38,12 +39,9 @@ public class Consumer implements UserDetails {
     private Boolean socialLogin;
     private Boolean status;         // email 인증 여부
 
+    @OneToOne(mappedBy = "consumer")
+    private ProfileImage profileImage;
 
-//    @OneToMany(fetch = FetchType.LAZY,mappedBy = "consumer")
-//    private List<Orders> ordersList = new ArrayList<>();
-
-
-    // TODO: builder 패턴 적용
     public static Consumer buildConsumer(ConsumerSignupReq consumerSignupReq, String consumerPW) {
         return Consumer.builder()
                 .email(consumerSignupReq.getEmail())
@@ -54,6 +52,20 @@ public class Consumer implements UserDetails {
                 .authority("CONSUMER")
                 .socialLogin(false)
                 .status(false)
+                .build();
+    }
+
+    public static Consumer buildConsumerUpdate(Consumer consumer, ConsumerUpdateReq consumerUpdateReq) {
+        return Consumer.builder()
+                .consumerIdx(consumer.getConsumerIdx())
+                .email(consumerUpdateReq.getEmail())
+                .consumerPW(consumerUpdateReq.getConsumerPW())
+                .consumerName(consumerUpdateReq.getConsumerName())
+                .consumerAddr(consumerUpdateReq.getConsumerAddr())
+                .consumerPhoneNum(consumerUpdateReq.getConsumerPhoneNum())
+                .authority(consumer.getAuthority())
+                .socialLogin(consumer.getSocialLogin())
+                .status(consumer.getStatus())
                 .build();
     }
 

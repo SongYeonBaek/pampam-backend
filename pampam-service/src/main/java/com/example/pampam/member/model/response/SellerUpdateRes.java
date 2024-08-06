@@ -1,5 +1,6 @@
 package com.example.pampam.member.model.response;
 
+import com.example.pampam.member.model.entity.Seller;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,4 +16,18 @@ public class SellerUpdateRes {
     private String authority;
     private Boolean status;
     private String sellerBusinessNumber;
+
+    public static SellerUpdateRes buildSellerUpdateRes(Seller seller) {
+        return SellerUpdateRes.builder()
+                .sellerIdx(seller.getSellerIdx())
+                .email(seller.getEmail())
+                .sellerPW(seller.getSellerPW())
+                .sellerName(seller.getSellerName())
+                .sellerAddr(seller.getSellerAddr())
+                .sellerPhoneNum(seller.getSellerPhoneNum())
+                .sellerBusinessNumber(seller.getSellerBusinessNumber())
+                .authority(seller.getAuthority())
+                .status(seller.getStatus())
+                .build();
+    }
 }

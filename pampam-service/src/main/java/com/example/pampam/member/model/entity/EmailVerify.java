@@ -23,4 +23,11 @@ public class EmailVerify {
     private Long id;
     private String email;
     private String uuid;
+
+    public static EmailVerify buildEmailVerify(String email, String uuid) {
+        return EmailVerify.builder()
+                .email(email)
+                .uuid(uuid)
+                .build();
+    }
 }
