@@ -1,6 +1,8 @@
 package com.example.pampam.member.service;
 
 
+import com.example.pampam.exception.EcommerceApplicationException;
+import com.example.pampam.exception.ErrorCode;
 import com.example.pampam.member.model.entity.Consumer;
 import com.example.pampam.member.model.entity.EmailVerify;
 import com.example.pampam.member.model.entity.Seller;
@@ -42,32 +44,42 @@ public class EmailVerifyService {
     }
 
     public RedirectView verify(GetEmailConfirmReq getEmailConfirmReq) {
-        Optional<EmailVerify> result = emailVerifyRepository.findByEmail(getEmailConfirmReq.getEmail());
-        if(result.isPresent()){
-            EmailVerify emailVerify = result.get();
-            if(emailVerify.getUuid().equals(getEmailConfirmReq.getToken())) {
+        Optional<EmailVerify> emailVerify = emailVerifyRepository.findByEmail(getEmailConfirmReq.getEmail());
+        if(emailVerify.isPresent()){
+            EmailVerify emailVerifyInfo = emailVerify.get();
+            if(emailVerifyInfo.getUuid().equals(getEmailConfirmReq.getToken())) {
                 update(getEmailConfirmReq.getEmail(), getEmailConfirmReq.getAuthority());
                 return new RedirectView("http://localhost:3000/emailconfirm/" + getEmailConfirmReq.getJwt());
+            } else {
+                throw new EcommerceApplicationException(ErrorCode.INVALID_UUID);
             }
         }
         return new RedirectView("http://localhost:3000/emailCertError");
     }
 
     private void update(String email, String authority) {
-        if (authority.equals("CONSUMER")){
-            Optional<Consumer> result = memberRepository.findByEmail(email);
-            if(result.isPresent()) {
-                Consumer member = result.get();
-                member.setStatus(true);
-                memberRepository.save(member);
+        try {
+            if (authority.equals("CONSUMER")){
+                Optional<Consumer> consumer = memberRepository.findByEmail(email);
+                if(consumer.isPresent()) {
+                    Consumer consumerInfo = consumer.get();
+                    consumerInfo.setStatus(true);
+                    memberRepository.save(consumerInfo);
+                } else {
+                    throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+                }
+            } else if (authority.equals("SELLER")){
+                Optional<Seller> seller = sellerRepository.findByEmail(email);
+                if(seller.isPresent()) {
+                    Seller sellerInfo = seller.get();
+                    sellerInfo.setStatus(true);
+                    sellerRepository.save(sellerInfo);
+                } else {
+                    throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+                }
             }
-        }else if (authority.equals("SELLER")){
-            Optional<Seller> result = sellerRepository.findByEmail(email);
-            if(result.isPresent()) {
-                Seller seller = result.get();
-                seller.setStatus(true);
-                sellerRepository.save(seller);
-            }
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
     private void create(String email, String uuid) {

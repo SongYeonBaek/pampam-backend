@@ -22,6 +22,8 @@ public enum ErrorCode {
     INVALID_TOKEN(1002, HttpStatus.UNAUTHORIZED, "인증되지 않은 토큰입니다."),
     INVALID_PASSWORD(1003, HttpStatus.UNAUTHORIZED, "비밀번호가 틀립니다."),
     NOT_MATCH_AUTHORITY(1004, HttpStatus.FORBIDDEN, "접근할 수 없는 사용자입니다."),
+    PROFILE_NOT_FOUND(1005, HttpStatus.NOT_FOUND, "프로필 이미지를 찾을 수 없습니다."),
+    INVALID_UUID(1006, HttpStatus.UNAUTHORIZED, "이메일 인증 정보가 틀렸습니다."),
 
     // 상품
     NOT_FOUND_CATEGORY(2000, HttpStatus.NOT_FOUND, "찾을 수 없는 카테고리 입니다."),
