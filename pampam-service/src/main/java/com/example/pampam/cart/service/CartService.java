@@ -36,12 +36,12 @@ public class CartService {
                 Cart cart = cartRepository.save(Cart.buildCart(productIdx, consumerIdx));
                 PostCartInRes product = PostCartInRes.buildPostCartInRes(cart);
 
-                return BaseResponse.successResponse("요청 성공", product);
+                return BaseResponse.successResponse("장바구니 추가가 완료되었습니다.", product);
             } else {
                 throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
             }
         } else {
-            return BaseResponse.failResponse(7000, "판매자는 접근이 불가합니다.");
+            throw new EcommerceApplicationException(ErrorCode.NOT_MATCH_AUTHORITY);
         }
     }
 
@@ -57,7 +57,7 @@ public class CartService {
                 Product product = cart.getProduct();
                 cartList.add(GetCartListRes.buildGetCartListRes(cart, product));
             }
-            return BaseResponse.successResponse("요청 성공", cartList);
+            return BaseResponse.successResponse("장바구니 조회가 정상적으로 처리되었습니다.", cartList);
         } else {
             throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
         }
@@ -70,23 +70,21 @@ public class CartService {
 
         if (consumerIdx != null) {
             cartRepository.deleteById(cartIdx);
-            return BaseResponse.successResponse("요청 성공", consumerInfo.get("email", String.class));
+            return BaseResponse.successResponse("장바구니 상품이 정상적으로 처리되었습니다.", consumerInfo.get("email", String.class));
         } else {
             throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
         }
     }
 
-    public BaseResponse<String> deleteOrderedCart(Long consumerIdx, Long productIdx) {
+    public void deleteOrderedCart(Long consumerIdx, Long productIdx) {
         try {
             List<Cart> carts = cartRepository.findAllByConsumerIdxAndProductIdx(consumerIdx, productIdx);
             if (carts.isEmpty()) {
-                return BaseResponse.failResponse(7000, "요청 실패" + " 카트를 찾을 수 없습니다.");
+                throw new EcommerceApplicationException(ErrorCode.CART_NOT_FOUND);
             }
-
             cartRepository.deleteById(carts.get(0).getIdx());
-            return BaseResponse.successResponse("요청 성공", "요청 성공");
         } catch (Exception e) {
-            return BaseResponse.failResponse(5000, "서버 오류가 발생했습니다.");
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
