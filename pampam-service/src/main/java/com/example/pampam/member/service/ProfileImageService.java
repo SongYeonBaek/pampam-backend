@@ -2,6 +2,8 @@ package com.example.pampam.member.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.example.pampam.exception.EcommerceApplicationException;
+import com.example.pampam.exception.ErrorCode;
 import com.example.pampam.member.model.entity.Consumer;
 import com.example.pampam.member.model.entity.ProfileImage;
 import com.example.pampam.member.repository.ProfileImageRepository;
@@ -76,7 +78,8 @@ public class ProfileImageService {
         Optional<ProfileImage> profileImage = profileImageRepository.findByConsumerEmail(email);
         if (profileImage.isPresent()) {
             return profileImage.get().getImagePath();
+        } else {
+            throw new EcommerceApplicationException(ErrorCode.PROFILE_NOT_FOUND);
         }
-        return null;
     }
 }

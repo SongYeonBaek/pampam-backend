@@ -1,6 +1,8 @@
 package com.example.pampam.member.service;
 
 import com.example.pampam.common.BaseResponse;
+import com.example.pampam.exception.EcommerceApplicationException;
+import com.example.pampam.exception.ErrorCode;
 import com.example.pampam.member.model.entity.Consumer;
 import com.example.pampam.member.model.entity.Seller;
 import com.example.pampam.member.model.request.*;
@@ -40,146 +42,175 @@ public class MemberService implements UserDetailsService {
 
     @Transactional
     public BaseResponse<ConsumerSignupRes> consumerSignup(ConsumerSignupReq consumerSignupReq, MultipartFile profileImage) {
-        if (consumerRepository.findByEmail(consumerSignupReq.getEmail()).isPresent()) {
-            return BaseResponse.failResponse(7000, "요청실패");
+        try {
+            if (consumerRepository.findByEmail(consumerSignupReq.getEmail()).isPresent()) {
+                throw new EcommerceApplicationException(ErrorCode.DUPLICATE_USER);
+            }
+
+            Consumer consumer = consumerRepository.save(Consumer.buildConsumer(consumerSignupReq, passwordEncoder.encode(consumerSignupReq.getConsumerPW())));
+
+            if (profileImage != null) {
+                profileImageService.saveProfileImage(profileImage, consumer);
+            }
+
+            String accessToken = JwtUtils.generateAccessToken(consumer, secretKey, expiredTimeMs);
+
+            SendEmailReq sendEmailReq = SendEmailReq.buildSendEmailReq(consumer, accessToken);
+            emailVerifyService.sendEmail(sendEmailReq);
+
+            Optional<Consumer> result = consumerRepository.findByEmail(consumer.getEmail());
+
+            if (result.isPresent()) {
+                consumer = result.get();
+            } else {
+                throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+            }
+
+            return BaseResponse.successResponse("회원가입에 성공하였습니다.", ConsumerSignupRes.buildConsumerSignupRes(consumer));
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-
-        Consumer consumer = consumerRepository.save(Consumer.buildConsumer(consumerSignupReq, passwordEncoder.encode(consumerSignupReq.getConsumerPW())));
-
-        if (profileImage != null) {
-            profileImageService.saveProfileImage(profileImage, consumer);
-        }
-
-        String accessToken = JwtUtils.generateAccessToken(consumer, secretKey, expiredTimeMs);
-
-        SendEmailReq sendEmailReq = SendEmailReq.buildSendEmailReq(consumer, accessToken);
-        emailVerifyService.sendEmail(sendEmailReq);
-
-        Optional<Consumer> result = consumerRepository.findByEmail(consumer.getEmail());
-
-        if (result.isPresent()){
-            consumer = result.get();
-        }
-
-        return BaseResponse.successResponse("요청성공",ConsumerSignupRes.buildConsumerSignupRes(consumer));
-
     }
+
+    @Transactional
     public BaseResponse<SellerSignupRes> sellerSignup(SellerSignupReq sellerSignupReq, MultipartFile image) {
+        try {
+            if (sellerRepository.findByEmail(sellerSignupReq.getEmail()).isPresent()) {
+                throw new EcommerceApplicationException(ErrorCode.DUPLICATE_USER);
+            }
 
-        if (sellerRepository.findByEmail(sellerSignupReq.getEmail()).isPresent()) {
-            return BaseResponse.failResponse(7000, "요청실패");
+            String saveFileName = profileImageService.saveProfileImage(image);
+            sellerSignupReq.setSellerPW(passwordEncoder.encode(sellerSignupReq.getSellerPW()));
+
+            Seller seller = sellerRepository.save(Seller.buildSeller(sellerSignupReq, saveFileName));
+            String accessToken = JwtUtils.generateAccessToken(seller, secretKey, expiredTimeMs);
+
+            SendEmailReq sendEmailReq = SendEmailReq.buildSendEmailReq(seller, accessToken);
+            emailVerifyService.sendEmail(sendEmailReq);
+
+            return BaseResponse.successResponse("회원가입에 성공하였습니다.", SellerSignupRes.buildSellerSignupRes(seller));
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-
-        String saveFileName = profileImageService.saveProfileImage(image);
-        sellerSignupReq.setSellerPW(passwordEncoder.encode(sellerSignupReq.getSellerPW()));
-
-        Seller seller = sellerRepository.save(Seller.buildSeller(sellerSignupReq, saveFileName));
-        String accessToken = JwtUtils.generateAccessToken(seller, secretKey, expiredTimeMs);
-
-        SendEmailReq sendEmailReq = SendEmailReq.buildSendEmailReq(seller, accessToken);
-        emailVerifyService.sendEmail(sendEmailReq);
-
-        return BaseResponse.successResponse("요청성공", SellerSignupRes.buildSellerSignupRes(seller));
     }
 
     public BaseResponse<ConsumerLoginRes> consumerLogin(ConsumerLoginReq consumerLoginReq) {
-        Optional<Consumer> consumer = consumerRepository.findByEmail(consumerLoginReq.getEmail());
-        if (consumer.isPresent()) {
-            if (passwordEncoder.matches(consumerLoginReq.getPassword(), consumer.get().getPassword())) {
-                ConsumerLoginRes consumerLoginRes = ConsumerLoginRes.buildConsumerLoginRes(consumer.get(), secretKey, expiredTimeMs);
-                return BaseResponse.successResponse("요청성공", consumerLoginRes);
-            }else {
-                return BaseResponse.failResponse(7000, "요청실패");
+        try {
+            Optional<Consumer> consumer = consumerRepository.findByEmail(consumerLoginReq.getEmail());
+            if (consumer.isPresent()) {
+                if (passwordEncoder.matches(consumerLoginReq.getPassword(), consumer.get().getPassword())) {
+                    ConsumerLoginRes consumerLoginRes = ConsumerLoginRes.buildConsumerLoginRes(consumer.get(), secretKey, expiredTimeMs);
+                    return BaseResponse.successResponse("로그인에 성공하였습니다.", consumerLoginRes);
+                } else {
+                    throw new EcommerceApplicationException(ErrorCode.INVALID_PASSWORD);
+                }
+            } else {
+                throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
             }
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        return BaseResponse.failResponse(7000, "요청실패");
     }
 
     public BaseResponse<SellerLoginRes> sellerLogin(SellerLoginReq sellerLoginReq) {
-        Optional<Seller> seller = sellerRepository.findByEmail(sellerLoginReq.getEmail());
-        if (seller.isPresent()) {
-            if (passwordEncoder.matches(sellerLoginReq.getPassword(), seller.get().getPassword())) {
-                SellerLoginRes sellerLoginRes = SellerLoginRes.buildSellerLoginRes(seller.get(), secretKey, expiredTimeMs);
-                return  BaseResponse.successResponse("요청성공",sellerLoginRes);
-            }else {
-                return BaseResponse.failResponse(7000, "요청실패");
+        try {
+            Optional<Seller> seller = sellerRepository.findByEmail(sellerLoginReq.getEmail());
+            if (seller.isPresent()) {
+                if (passwordEncoder.matches(sellerLoginReq.getPassword(), seller.get().getPassword())) {
+                    SellerLoginRes sellerLoginRes = SellerLoginRes.buildSellerLoginRes(seller.get(), secretKey, expiredTimeMs);
+                    return  BaseResponse.successResponse("로그인에 성공하였습니다.",sellerLoginRes);
+                }else {
+                    throw new EcommerceApplicationException(ErrorCode.INVALID_PASSWORD);
+                }
             }
+            throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        return BaseResponse.failResponse(7000, "요청실패");
     }
 
     public BaseResponse<ConsumerUpdateRes> consumerUpdate(ConsumerUpdateReq consumerUpdateReq) {
-        Optional<Consumer> result = consumerRepository.findByEmail(consumerUpdateReq.getEmail());
-        Consumer consumer = null;
-        if (result.isPresent()) {
-            consumer = result.get();
-            consumerUpdateReq.setConsumerPW(passwordEncoder.encode(consumerUpdateReq.getConsumerPW()));
-            consumer = Consumer.buildConsumerUpdate(consumer, consumerUpdateReq);
-            consumerRepository.save(consumer);
-
-            return BaseResponse.successResponse("요청성공", ConsumerUpdateRes.buildConsumerUpdateRes(consumer));
-        } else {
-            return BaseResponse.failResponse(7000, "요청실패");
+        try {
+            Optional<Consumer> consumer = consumerRepository.findByEmail(consumerUpdateReq.getEmail());
+            if (consumer.isPresent()) {
+                consumerUpdateReq.setConsumerPW(passwordEncoder.encode(consumerUpdateReq.getConsumerPW()));
+                Consumer updatedConsumer = consumerRepository.save(Consumer.buildConsumerUpdate(consumer.get(), consumerUpdateReq));
+                return BaseResponse.successResponse("회원정보 수정을 완료하였습니다.", ConsumerUpdateRes.buildConsumerUpdateRes(updatedConsumer));
+            } else {
+                throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
     public BaseResponse<SellerUpdateRes> sellerUpdate(SellerUpdateReq sellerUpdateReq) {
-        Optional<Seller> result = sellerRepository.findByEmail(sellerUpdateReq.getEmail());
-        Seller seller = null;
-
-        if (result.isPresent()) {
-            seller = result.get();
-            sellerUpdateReq.setSellerPW(passwordEncoder.encode(sellerUpdateReq.getSellerPW()));
-            seller = Seller.buildSellerUpdate(seller, sellerUpdateReq);
-            sellerRepository.save(seller);
-
-            return BaseResponse.successResponse("요청성공", SellerUpdateRes.buildSellerUpdateRes(seller));
-
-        } else {
-            return null;
+        try {
+            Optional<Seller> seller = sellerRepository.findByEmail(sellerUpdateReq.getEmail());
+            if (seller.isPresent()) {
+                sellerUpdateReq.setSellerPW(passwordEncoder.encode(sellerUpdateReq.getSellerPW()));
+                Seller updatedSeller = sellerRepository.save(Seller.buildSellerUpdate(seller.get(), sellerUpdateReq));
+                return BaseResponse.successResponse("회원정보 수정을 완료하였습니다.", SellerUpdateRes.buildSellerUpdateRes(updatedSeller));
+            } else {
+                throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-
     }
 
     public BaseResponse<ConsumerDeleteRes> consumerDelete(ConsumerDeleteReq consumerDeleteReq) {
-        Optional<Consumer> result = consumerRepository.findByEmail(consumerDeleteReq.getEmail());
-        if (result.isPresent()) {
-            consumerRepository.delete(result.get());
-            return BaseResponse.successResponse("요청성공", ConsumerDeleteRes.buildConsumerDeleteRes(consumerDeleteReq));
+        try {
+            Optional<Consumer> consumer = consumerRepository.findByEmail(consumerDeleteReq.getEmail());
+            if (consumer.isPresent()) {
+                consumerRepository.delete(consumer.get());
+                return BaseResponse.successResponse("회원 탈퇴가 정상적으로 처리되었습니다.", ConsumerDeleteRes.buildConsumerDeleteRes(consumerDeleteReq));
+            }
+            throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        return BaseResponse.failResponse(7000, "요청실패");
-
     }
     public BaseResponse<SellerDeleteRes> sellerDelete(SellerDeleteReq sellerDeleteReq) {
-        Optional<Seller> result = sellerRepository.findByEmail(sellerDeleteReq.getEmail());
-        if (result.isPresent()) {
-            sellerRepository.delete(result.get());
-            return BaseResponse.successResponse("요청성공", SellerDeleteRes.buildSellerDeleteRes(sellerDeleteReq));
+        try {
+            Optional<Seller> seller = sellerRepository.findByEmail(sellerDeleteReq.getEmail());
+            if (seller.isPresent()) {
+                sellerRepository.delete(seller.get());
+                return BaseResponse.successResponse("회원 탈퇴가 정상적으로 처리되었습니다.", SellerDeleteRes.buildSellerDeleteRes(sellerDeleteReq));
+            }
+            throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        return BaseResponse.failResponse(7000, "요청실패");
-
     }
 
     public BaseResponse<GetProfileImageRes> getConsumerProfileImage(String email) {
-        String imageAddr = profileImageService.findProfileImage(email);
-        return BaseResponse.successResponse("요청 성공", GetProfileImageRes.buildProfileImageRes(imageAddr));
+        try {
+            String imageAddr = profileImageService.findProfileImage(email);
+            return BaseResponse.successResponse("프로필 조회를 성공하였습니다.", GetProfileImageRes.buildProfileImageRes(imageAddr));
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public Consumer getMemberByConsumerID(String email) {
-        Optional<Consumer> result = consumerRepository.findByEmail(email);
-        if(result.isPresent()){
-            return result.get();
+        try {
+            Optional<Consumer> consumer = consumerRepository.findByEmail(email);
+            if(consumer.isPresent()){
+                return consumer.get();
+            } else {
+                throw new EcommerceApplicationException(ErrorCode.USER_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            throw new EcommerceApplicationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        return null;
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Optional<Consumer> result = consumerRepository.findByEmail(email);
         Consumer member = null;
-        if (result.isPresent())
-            member = result.get();
-
+        if (result.isPresent()) member = result.get();
         return member;
     }
 }
