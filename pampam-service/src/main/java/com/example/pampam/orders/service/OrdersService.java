@@ -106,7 +106,7 @@ public class OrdersService {
         }
 
         for(String impUid : impUidList){
-            paymentService.paymentCancel(impUid);
+            paymentService.paymentCancel(impUid, product.get().getPrice());
         }
         return  BaseResponse.successResponse("공동구매 전원 취소 완료", "[결제 취소] 인원 부족으로 인해 공동구매가 취소되었습니다.");
     }
