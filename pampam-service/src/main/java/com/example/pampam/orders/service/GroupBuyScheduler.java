@@ -28,7 +28,7 @@ public class GroupBuyScheduler {
     private final PaymentService paymentService;
     private final EmailVerifyService emailVerifyService;
 
-//    @Scheduled(cron="0 5 0 * * *")
+    @Scheduled(cron="0 5 0 * * *")
     public void groupBuy() throws IOException {
         LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1);
         LocalDateTime dateTime = now.atStartOfDay().withHour(9).withMinute(0).withSecond(0).withNano(0);
