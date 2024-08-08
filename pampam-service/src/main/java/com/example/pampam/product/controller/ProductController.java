@@ -79,9 +79,18 @@ public class ProductController {
         return ResponseEntity.ok().body(productService.delete(token,idx));
     }
 
+    //상품 검색 기능
     @ApiOperation(value = "상품 검색")
     @RequestMapping(method = RequestMethod.GET, value = "/search/{keyword}")
     public ResponseEntity searchByName(@PathVariable String keyword){
         return ResponseEntity.ok().body(productService.searchByName(keyword) );
     }
+
+    //메인 페이지 - 마감 임박 상품 목록 조회
+    @RequestMapping(method = RequestMethod.GET, value = "/deadline/list")
+    public ResponseEntity<Object> deadLinelist(Integer page, Integer size) {
+        return ResponseEntity.ok().body(productService.deadLinelist(page, size));
+    }
+
+
 }
