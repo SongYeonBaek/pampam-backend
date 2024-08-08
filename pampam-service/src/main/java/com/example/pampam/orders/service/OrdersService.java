@@ -53,7 +53,7 @@ public class OrdersService {
 
             // Custom Data 안에 있던 Product 리스트 하나씩 꺼내와서 OrderedProduct에 저장
             for (GetPortOneRes getPortOneRes : paymentProducts.getProducts()) {
-                orderedProductRepository.save(OrderedProduct.dtoToEntity(order, getPortOneRes, consumerIdx, impUid, getPortOneRes.getPrice()));
+                orderedProductRepository.save(OrderedProduct.buildOrderedProduct(order, getPortOneRes, consumerIdx, impUid, getPortOneRes.getPrice(), userEmail));
                 orderList.add(PostOrderInfoRes.dtoToEntity(order.getIdx(), impUid, getPortOneRes, order));
 
                 // 카트 삭제

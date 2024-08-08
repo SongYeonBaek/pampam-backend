@@ -7,6 +7,7 @@ import com.example.pampam.orders.model.entity.PaymentValidationResult;
 import com.example.pampam.orders.model.response.GetOrderedProductList;
 import com.example.pampam.orders.model.response.OrdersListRes;
 import com.example.pampam.orders.model.response.PostOrderInfoRes;
+import com.example.pampam.orders.service.GroupBuyScheduler;
 import com.example.pampam.orders.service.OrdersService;
 import com.example.pampam.orders.service.PaymentService;
 import com.example.pampam.product.model.response.GetProductReadRes;
@@ -25,6 +26,7 @@ import java.util.List;
 public class OrdersController {
     private final OrdersService ordersService;
     private final PaymentService paymentService;
+    private final GroupBuyScheduler groupBuyScheduler;
 
     @ApiOperation(value = "상품 주문")
     @ApiImplicitParams({
@@ -81,4 +83,12 @@ public class OrdersController {
     public BaseResponse<List<GetOrderedProductList>> orderedProductList(@RequestHeader(value = "Authorization") String token) throws IOException {
         return ordersService.orderedProductList(token);
     }
+
+
+    //테스트
+    @RequestMapping(method = RequestMethod.GET, value = "test")
+    public void scheduler() throws IOException {
+       groupBuyScheduler.groupBuy();
+    }
+
 }

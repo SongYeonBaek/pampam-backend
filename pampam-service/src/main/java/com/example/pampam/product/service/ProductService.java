@@ -44,7 +44,7 @@ public class ProductService {
         Claims sellerInfo = JwtUtils.getSellerInfo(token, secretKey);
 
         if (sellerInfo.get("authority", String.class).equals("SELLER")) {
-            Product product = productRepository.save(Product.dtoToEntity(productRegisterReq, sellerInfo));
+            Product product = productRepository.save(Product.buildProduct(productRegisterReq, sellerInfo));
             for (MultipartFile uploadFile : images) {
                 String uploadPath = imageSaveService.uploadFile(uploadFile);
                 imageSaveService.saveFile(product.getIdx(), uploadPath);

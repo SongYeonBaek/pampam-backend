@@ -27,4 +27,11 @@ public class SendEmailReq {
                 .accessToken(accessToken)
                 .build();
     }
+
+    public static SendEmailReq buildSendEmailReq(String email) {
+        return SendEmailReq.builder()
+                .email(email)
+                .build();
+    }
+
 }
