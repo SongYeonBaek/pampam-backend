@@ -18,4 +18,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, Product
 
     List<Product> findAllByCloseAt(Date closeAt);
 
+
+    // available이 true인 상품을 마감시간(closeAt)을 기준으로 내림차순 정렬, 결과를 페이지 크기로 제한
+    List<Product> findByAvailableTrueOrderByCloseAtDesc(Pageable pageable);
+
+    // available이 true인 상품을 공동구매 참여 인원(peopleCount)을 기준으로 내림차순 정렬, 결과를 페이지 크기로 제한
+    List<Product> findByAvailableTrueOrderByPeopleCountDesc(Pageable pageable);
 }

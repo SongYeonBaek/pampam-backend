@@ -57,7 +57,7 @@ public class ProductService {
     }
 
     // TODO: 상품 전체 조회
-    public BaseResponse<Object> list(Integer page, Integer size) {
+    public BaseResponse<List<GetProductReadRes>> list(Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page-1,size);
         Page<Product> result = productRepository.findList(pageable);
         List<GetProductReadRes> productReadResList = new ArrayList<>();
@@ -207,4 +207,47 @@ public class ProductService {
         return BaseResponse.successResponse("검색 성공", productListRes);
     }
 
+    public BaseResponse<List<GetProductReadRes>> deadLinelist(Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page-1,size);
+        List<Product> result = productRepository.findByAvailableTrueOrderByCloseAtDesc(pageable);
+        List<GetProductReadRes> productReadResList = new ArrayList<>();
+
+        for (Product product : result) {
+
+            List<ProductImage> productImages = productImageRepository.findByProductIdx(product.getIdx());
+
+            List<String> file = new ArrayList<>();
+            for (ProductImage productImage : productImages) {
+                file.add(productImage.getImagePath());
+            }
+
+            GetProductReadRes getProductReadRes = GetProductReadRes.entityToDto(product, file);
+            productReadResList.add(getProductReadRes);
+        }
+
+        // DtoToRes
+        return BaseResponse.successResponse("요청 성공", productReadResList);
+    }
+
+    public BaseResponse<List<GetProductReadRes>>  hotDealList(Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page-1,size);
+        List<Product> result = productRepository.findByAvailableTrueOrderByPeopleCountDesc(pageable);
+        List<GetProductReadRes> productReadResList = new ArrayList<>();
+
+        for (Product product : result) {
+
+            List<ProductImage> productImages = productImageRepository.findByProductIdx(product.getIdx());
+
+            List<String> file = new ArrayList<>();
+            for (ProductImage productImage : productImages) {
+                file.add(productImage.getImagePath());
+            }
+
+            GetProductReadRes getProductReadRes = GetProductReadRes.entityToDto(product, file);
+            productReadResList.add(getProductReadRes);
+        }
+
+        // DtoToRes
+        return BaseResponse.successResponse("요청 성공", productReadResList);
+    }
 }

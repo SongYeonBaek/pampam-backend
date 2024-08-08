@@ -85,10 +85,6 @@ public class OrdersController {
     }
 
 
-    //테스트
-    @RequestMapping(method = RequestMethod.GET, value = "test")
-    public void scheduler() throws IOException {
-       groupBuyScheduler.groupBuy();
-    }
+
 
 }

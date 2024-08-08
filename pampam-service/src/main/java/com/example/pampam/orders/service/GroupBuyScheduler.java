@@ -28,7 +28,7 @@ public class GroupBuyScheduler {
     private final PaymentService paymentService;
     private final EmailVerifyService emailVerifyService;
 
-//    @Scheduled(cron="0 5 0 * * *")
+    @Scheduled(cron="0 5 0 * * *")
     public void groupBuy() throws IOException {
         LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1);
         LocalDateTime dateTime = now.atStartOfDay().withHour(9).withMinute(0).withSecond(0).withNano(0);
@@ -51,6 +51,7 @@ public class GroupBuyScheduler {
                     SendEmailReq sendEmailReq = SendEmailReq.buildSendEmailReq(orderedProduct.getConsumerEmail());
                     emailVerifyService.sendSuccessEmail(sendEmailReq);
 
+
                 } else {
                     // 공동 구매 취소
                     orderedProduct.setStatus(2);
@@ -64,6 +65,11 @@ public class GroupBuyScheduler {
                 }
                 orderedProductRepository.save(orderedProduct);
             }
+
+            //상품 상태를 마감된 상품으로 변경
+            product.setAvailable(false);
+            productRepository.save(product);
+
         }
     }
 }
