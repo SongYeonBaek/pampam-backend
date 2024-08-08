@@ -22,6 +22,7 @@ public class SwaggerConfig {
                                 .or(RequestHandlerSelectors.basePackage("com.example.pampam.cart"))
                                 .or(RequestHandlerSelectors.basePackage("com.example.pampam.category"))
                                 .or(RequestHandlerSelectors.basePackage("com.example.pampam.orders"))
+                                .or(RequestHandlerSelectors.basePackage("com.example.pampam.member"))
 
                 )
                 .paths(PathSelectors.any())
