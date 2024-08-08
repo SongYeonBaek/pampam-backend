@@ -92,5 +92,11 @@ public class ProductController {
         return ResponseEntity.ok().body(productService.deadLinelist(page, size));
     }
 
+    //메인 페이지 - 핫딜 상품 목록 조회
+    @RequestMapping(method = RequestMethod.GET, value = "/hotdeal/list")
+    public ResponseEntity<Object> hotDealList(Integer page, Integer size) {
+        return ResponseEntity.ok().body(productService.hotDealList(page, size));
+    }
+
 
 }
