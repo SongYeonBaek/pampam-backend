@@ -51,6 +51,7 @@ public class GroupBuyScheduler {
                     SendEmailReq sendEmailReq = SendEmailReq.buildSendEmailReq(orderedProduct.getConsumerEmail());
                     emailVerifyService.sendSuccessEmail(sendEmailReq);
 
+
                 } else {
                     // 공동 구매 취소
                     orderedProduct.setStatus(2);
@@ -64,6 +65,11 @@ public class GroupBuyScheduler {
                 }
                 orderedProductRepository.save(orderedProduct);
             }
+
+            //상품 상태를 마감된 상품으로 변경
+            product.setAvailable(false);
+            productRepository.save(product);
+
         }
     }
 }
