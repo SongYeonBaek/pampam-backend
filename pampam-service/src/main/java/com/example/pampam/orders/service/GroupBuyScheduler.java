@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -22,9 +23,10 @@ import java.util.List;
 public class GroupBuyScheduler {
     private final OrderedProductRepository orderedProductRepository;
     private final ProductRepository productRepository;
+    private final PaymentService paymentService;
 
     @Scheduled(cron="0 5 0 * * *")
-    public void groupBuy(){
+    public void groupBuy() throws IOException {
         LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1);
         LocalDateTime dateTime = now.atStartOfDay().withHour(9).withMinute(0).withSecond(0).withNano(0);
 
@@ -41,9 +43,17 @@ public class GroupBuyScheduler {
                 if (people <= peopleCount) {
                     // 공동 구매 체결
                     orderedProduct.setStatus(1);
+
+                    //공동 구매 체결, 배송 시작 이메일 발송
+
                 } else {
                     // 공동 구매 취소
                     orderedProduct.setStatus(2);
+
+                    //결제 취소
+                    paymentService.paymentCancel(orderedProduct.getImpUid(), orderedProduct.getPrice());
+
+                    //환불 완료 이메일 발송
                 }
                 orderedProductRepository.save(orderedProduct);
             }
