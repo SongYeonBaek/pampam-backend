@@ -7,6 +7,7 @@ import com.example.pampam.orders.model.entity.PaymentValidationResult;
 import com.example.pampam.orders.model.response.GetOrderedProductList;
 import com.example.pampam.orders.model.response.OrdersListRes;
 import com.example.pampam.orders.model.response.PostOrderInfoRes;
+import com.example.pampam.orders.service.GroupBuyScheduler;
 import com.example.pampam.orders.service.OrdersService;
 import com.example.pampam.orders.service.PaymentService;
 import com.example.pampam.product.model.response.GetProductReadRes;
@@ -25,6 +26,7 @@ import java.util.List;
 public class OrdersController {
     private final OrdersService ordersService;
     private final PaymentService paymentService;
+    private final GroupBuyScheduler groupBuyScheduler;
 
     @ApiOperation(value = "상품 주문")
     @ApiImplicitParams({
@@ -49,15 +51,13 @@ public class OrdersController {
     }
 
 
-
-
     //Consumer의 주문 내역을 확인
     @ApiOperation(value = "주문 내역 조회")
     @ApiImplicitParam(name = "email", value = "이메일을 받기 위한 토큰 입력",
             required = true, paramType = "query", dataType = "string", defaultValue = "")
     @RequestMapping(method = RequestMethod.GET,value = "/list")
     public BaseResponse<List<OrdersListRes>>  orderList(@RequestHeader(value = "Authorization") String token) {
-    return ordersService.orderList(token);
+        return ordersService.orderList(token);
     }
 
     //Consumer가 구매를 취소
@@ -66,8 +66,8 @@ public class OrdersController {
             @ApiImplicitParam(name = "impUid", value = "취소할 주문의 주문 번호 입력",
                     required = true, paramType = "query", dataType = "string", defaultValue = ""))
     @RequestMapping(method = RequestMethod.GET,value = "/cancel")
-    public BaseResponse<String> orderCancel(String impUid) throws IOException {
-        return paymentService.paymentCancel(impUid);
+    public BaseResponse<String> orderCancel(String impUid, Integer price) throws IOException {
+        return paymentService.paymentCancel(impUid, price);
     }
 
     //마감 시간이 지나고 인원 수가 다 차지 않았다면 결제를 취소
@@ -83,4 +83,8 @@ public class OrdersController {
     public BaseResponse<List<GetOrderedProductList>> orderedProductList(@RequestHeader(value = "Authorization") String token) throws IOException {
         return ordersService.orderedProductList(token);
     }
+
+
+
+
 }
