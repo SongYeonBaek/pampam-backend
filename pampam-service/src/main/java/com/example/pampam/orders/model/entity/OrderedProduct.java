@@ -29,12 +29,18 @@ public class OrderedProduct {
 
     private Long consumerIdx;
 
-    public static OrderedProduct dtoToEntity(Orders orders, GetPortOneRes getPortOneRes, Long consumerIdx) {
+    private Integer price;
+
+    private String impUid;
+
+    public static OrderedProduct dtoToEntity(Orders orders, GetPortOneRes getPortOneRes, Long consumerIdx, String impUid, Integer price) {
         return OrderedProduct.builder()
                 .orders(orders)
                 .product(Product.builder().idx(getPortOneRes.getId()).build())
                 .status(0)
                 .consumerIdx(consumerIdx)
+                .impUid(impUid)
+                .price(price)
                 .build();
     }
 }

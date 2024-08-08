@@ -109,7 +109,7 @@ public class PaymentService {
 
 
 
-    public BaseResponse<String> paymentCancel(String impUid) throws IOException {
+    public BaseResponse<String> paymentCancel(String impUid, Integer price) throws IOException {
         String token = getToken();
 
         URL url = new URL("https://api.iamport.kr/payments/cancel");
@@ -128,6 +128,7 @@ public class PaymentService {
         // JSON 객체에 해당 API가 필요로하는 데이터 추가.
         JsonObject json = new JsonObject();
         json.addProperty("imp_uid", impUid);
+        json.addProperty("amount", price);
         json.addProperty("reason", "공동 구매 인원 부족으로 인한 주문 취소");
 
         // 출력 스트림으로 해당 conn에 요청

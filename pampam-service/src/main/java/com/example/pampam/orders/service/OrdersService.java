@@ -53,7 +53,7 @@ public class OrdersService {
 
             // Custom Data 안에 있던 Product 리스트 하나씩 꺼내와서 OrderedProduct에 저장
             for (GetPortOneRes getPortOneRes : paymentProducts.getProducts()) {
-                orderedProductRepository.save(OrderedProduct.dtoToEntity(order, getPortOneRes, consumerIdx));
+                orderedProductRepository.save(OrderedProduct.dtoToEntity(order, getPortOneRes, consumerIdx, impUid, getPortOneRes.getPrice()));
                 orderList.add(PostOrderInfoRes.dtoToEntity(order.getIdx(), impUid, getPortOneRes, order));
 
                 // 카트 삭제
@@ -106,7 +106,7 @@ public class OrdersService {
         }
 
         for(String impUid : impUidList){
-            paymentService.paymentCancel(impUid);
+            paymentService.paymentCancel(impUid, product.get().getPrice());
         }
         return  BaseResponse.successResponse("공동구매 전원 취소 완료", "[결제 취소] 인원 부족으로 인해 공동구매가 취소되었습니다.");
     }
