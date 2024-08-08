@@ -62,6 +62,9 @@ public class Product {
     private String sellerEmail;
     private String sellerName;
 
+    //공동구매가 진행 중/ 끝난 상품인지를 나타내는 변수
+    private Boolean available;
+
     // TODO: 연관관계 설정 후 외래키 지정
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();
@@ -72,7 +75,7 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<OrderedProduct> orderedProducts = new ArrayList<>();
 
-    public static Product dtoToEntity(PostProductRegisterReq productRegisterReq, Claims sellerInfo) {
+    public static Product buildProduct(PostProductRegisterReq productRegisterReq, Claims sellerInfo) {
         return Product.builder()
                 .productName(productRegisterReq.getProductName())
                 .productInfo(productRegisterReq.getProductInfo())
@@ -82,6 +85,7 @@ public class Product {
                 .closeAt(productRegisterReq.getCloseAt())
                 .people(productRegisterReq.getPeople())
                 .peopleCount(1)
+                .available(true)
                 .categoryIdx(productRegisterReq.getCategoryIdx())
                 .sellerIdx(sellerInfo.get("idx", Long.class))
                 .sellerEmail(sellerInfo.get("email", String.class))
