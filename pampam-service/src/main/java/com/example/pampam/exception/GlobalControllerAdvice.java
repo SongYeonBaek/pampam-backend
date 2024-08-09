@@ -12,12 +12,13 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(value = EcommerceApplicationException.class)
     public ResponseEntity<Object> handleEcommerceApplicationException(EcommerceApplicationException e) {
         return ResponseEntity.status(e.getErrorCode().getStatus())
-                .body(BaseResponse.failResponse(e.getErrorCode().getCode(), e.getErrorCode().name()));
+                .body(BaseResponse.failResponse(e.getErrorCode().getCode(), e.getErrorCode().getMessage()));
     }
 
     @ExceptionHandler(value = CustomJwtSignatureException.class)
     public ResponseEntity<Object> handleCustomJwtSignatureException(CustomJwtSignatureException e) {
         return ResponseEntity.status(e.getErrorCode().getStatus())
-                .body(BaseResponse.failResponse(e.getErrorCode().getCode(), e.getErrorCode().name()));    }
+                .body(BaseResponse.failResponse(e.getErrorCode().getCode(), e.getErrorCode().getMessage()));
+    }
 
 }
